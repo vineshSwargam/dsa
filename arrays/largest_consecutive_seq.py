@@ -108,7 +108,7 @@ print(l1)
 # merge_sort(l1)
 
 class Solution:
-    def longest_consecutive(self, nums) -> int:
+    def using_merge_sort(self, nums):
         s_nums = merge_sort(nums)
         nl = len(s_nums)
         if nl < 1:
@@ -132,6 +132,10 @@ class Solution:
             print('Count -', count)
 
         print(max_count)
+        return max_count
+
+    def longest_consecutive(self, nums) -> int:
+        return self.using_merge_sort(nums)
 
         
 
