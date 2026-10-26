@@ -47,7 +47,7 @@
 
 from math import floor
 from collections import defaultdict
-
+from largest_consecutive_fixture import l0
 
 def merge_sort(nums):
     n = len(nums)
@@ -135,24 +135,7 @@ class Solution:
         print(max_count)
         return max_count
 
-    def longest_consecutive(self, nums) -> int:
-        # return self.using_merge_sort(nums)
-        
-        # [0,3,2,5,4,6,1,1]
-        # check if n-1 exists
-        # if not, then this is seq starter
-        # add it to a hash set { [n]: {n}}
-        # { 0: {0}}
-        # { 0: {0}, 3: {3} }
-        # { 0: {0}, 3: {3} }
-        # { 0: {0}, 2: ({2, 3}, None), 3: ({3}, 2) }
-        # { 0: 1, 2: {2, 3}, 3: ({3}, 2), 5: {5} }
-        # while obj[n-1][1] != None: obj[obj[n-1][1]] = obj[obj[n-1][1]][0].add(n)
-        # 
-        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }
-        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }
-        ####################################
-        #                              starter is 1, max is 2
+    def using_hash_map(self, nums):
         seq = defaultdict(lambda: [set(), int, int])
         # s = { 1 }
         # print(s.add(2))
@@ -228,7 +211,47 @@ class Solution:
 
             
         return max_seq_len
+    
+    def using_set_while(self, nums):
+        length = 0
+        max_len = 0
+        num_set = set(nums)
 
+        for n in nums:
+            if n-1 not in num_set:
+                length = 1
+                n += 1
+                while n in num_set:
+                    length += 1
+                    n += 1
+                    if length > max_len:
+                        max_len = length
+
+        return max_len
+
+
+    def longest_consecutive(self, nums) -> int:
+        # return self.using_merge_sort(nums)
+        # return self.using_hash_map(nums)
+        return self.using_set_while(nums)
+        
+        # [0,3,2,5,4,6,1,1]
+        # check if n-1 exists
+        # if not, then this is seq starter
+        # add it to a hash set { [n]: {n}}
+        # { 0: {0}}
+        # { 0: {0}, 3: {3} }
+        # { 0: {0}, 3: {3} }
+        # { 0: {0}, 2: ({2, 3}, None), 3: ({3}, 2) }
+        # { 0: 1, 2: {2, 3}, 3: ({3}, 2), 5: {5} }
+        # while obj[n-1][1] != None: obj[obj[n-1][1]] = obj[obj[n-1][1]][0].add(n)
+        # 
+        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }
+        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }
+        ####################################
+        #                              starter is 1, max is 2
+
+        
 
         
 
@@ -245,5 +268,5 @@ l2 = [2,20,4,10,3,4,5] # - 4
 # l2 = [3, 5, 2, 1, 4, 0]
 # l2 = [5, 2, 3, 1, 4, 0]
 # l2 = [5, 3, 2, 1, 4, 0]
-print(l2)
-print(sol.longest_consecutive(l2))
+# print(l2)
+print(sol.longest_consecutive(l0))
