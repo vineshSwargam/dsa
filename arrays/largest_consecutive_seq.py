@@ -46,6 +46,7 @@
 # We can consider a number num as the start of a sequence if and only if num - 1 does not exist in the given array. We iterate through the array and only start building the sequence if it is the start of a sequence. This avoids repeated work. We can use a hash set for O(1) lookups by converting the array to a hash set.
 
 from math import floor
+from collections import defaultdict
 
 
 def merge_sort(nums):
@@ -102,9 +103,9 @@ def merge_sort(nums):
 
 
 
-l1 = [ 5, 2, 4, 3, 1]
+# l1 = [ 5, 2, 4, 3, 1]
 # l1 = [2, 5, 4, 1, 3]
-print(l1)
+# print(l1)
 # merge_sort(l1)
 
 class Solution:
@@ -135,12 +136,114 @@ class Solution:
         return max_count
 
     def longest_consecutive(self, nums) -> int:
-        return self.using_merge_sort(nums)
+        # return self.using_merge_sort(nums)
+        
+        # [0,3,2,5,4,6,1,1]
+        # check if n-1 exists
+        # if not, then this is seq starter
+        # add it to a hash set { [n]: {n}}
+        # { 0: {0}}
+        # { 0: {0}, 3: {3} }
+        # { 0: {0}, 3: {3} }
+        # { 0: {0}, 2: ({2, 3}, None), 3: ({3}, 2) }
+        # { 0: 1, 2: {2, 3}, 3: ({3}, 2), 5: {5} }
+        # while obj[n-1][1] != None: obj[obj[n-1][1]] = obj[obj[n-1][1]][0].add(n)
+        # 
+        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }
+        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }
+        ####################################
+        #                              starter is 1, max is 2
+        seq = defaultdict(lambda: [set(), int, int])
+        # s = { 1 }
+        # print(s.add(2))
+        # return
+
+        for n in nums:
+            # print('N = ', n)
+            if n in seq:
+                continue
+
+            if n-1 not in seq and n+1 not in seq:
+                seq[n] = [{n}, None, n]
+                print('Seq - ', seq)
+                continue
+
+            if n-1 in seq and n+1 in seq:
+                lb_key = seq[n-1][1] if seq[n-1][1] != None else n-1
+                ub_key = seq[n+1][1] if seq[n+1][1] != None else n+1
+                # print("BOTH in sequence. lbkey -", lb_key, "ub_key -", ub_key)
+
+                #  UNION OF BOTH SETS
+                seq[lb_key][0] = seq[lb_key][0] | {n} | seq[ub_key][0]
+
+                # Point UB Starter to LB as it is new starter of union sequence
+                ub_seq_end = seq[ub_key][2]
+                seq[ub_seq_end][1] = lb_key
+                # take the max of ub
+                seq[lb_key][2] = ub_seq_end
+                print('LB key -', lb_key, 'UB key -', ub_key)
+                print('Seq LB and UB - ', seq[lb_key], seq[ub_key])
+
+                continue
+            
+            if n-1 in seq:
+                starter_key = seq[n-1][1] if seq[n-1][1] != None else n-1
+                seq[n] = [{n}, starter_key, n]
+
+                seq[starter_key][0].add(n)
+                seq_max = seq[starter_key][2]
+                if n > seq_max:
+                    seq[starter_key][2] = n
+                print('In n-1 -', n-1, n, starter_key)
+                if starter_key == n-1:
+                    print('N-1 is the starter')
+                    print('Seq n and n-1 - ', seq[n], seq[n-1])
+                else:
+                    print('N-1 has a starter - ', starter_key)
+                    print('Seq n, n-1, and starter - ', seq[n], seq[n-1], seq[starter_key])
+                    
+            if n+1 in seq:
+                # if seq[n+1][1] != None:
+                    # print('Houston we have a problem! - ', n)
+                new_set = seq[n+1][0]
+                new_set.add(n)
+                seq[n] = [new_set, None, seq[n+1][2]]
+                seq[n+1][1] = n
+
+                ub_seq_end = seq[n+1][2]
+                seq[ub_seq_end][1] = n
+                # take the max of ub
+                seq[n][2] = ub_seq_end
+                print('In n+1 loop -', n, n+1)
+                print('So n will become the starter for n+1')
+                print('Seq n and n+1 - ', seq[n], seq[n+1])
+
+            # print('Seq - ', seq)
+
+        max_seq_len = 0
+        for s in seq.values():
+            seq_len = len(s[0])
+            if seq_len > max_seq_len:
+                max_seq_len = seq_len
+
+            
+        return max_seq_len
+
 
         
 
 sol = Solution()
-# l3 = [0,3,2,5,4,6,1,1]
-# l4 = [2,20,4,10,3,4,5]
-l5 = [0,3,2,5,4,6,1,1]
-print(sol.longest_consecutive(l5))
+# l1 = [0,3,2,5,4,6,1,1] # 7
+l2 = [2,20,4,10,3,4,5] # - 4
+# l1 = [0,3,7,2,5,8,4,6,0,1] # - 8
+
+# l2 = [2, 3, 1, 5, 4, 0]
+# l2 = [2, 3, 5, 1, 4, 0]
+# l2 = [2, 5, 3, 1, 4, 0]
+# l2 = [3, 2, 1, 5, 4, 0]
+# l2 = [3, 2, 5, 1, 4, 0]
+# l2 = [3, 5, 2, 1, 4, 0]
+# l2 = [5, 2, 3, 1, 4, 0]
+# l2 = [5, 3, 2, 1, 4, 0]
+print(l2)
+print(sol.longest_consecutive(l2))
