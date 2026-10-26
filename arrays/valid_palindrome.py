@@ -81,59 +81,39 @@ class Solution:
         j = len(s) - 1
         if j==0:
             return True
-        alpha_range = set(range(ord('A'), ord('Z')+1)) | set(range(ord('a'), ord('z')))
-        num_range = set(range(ord('0'), ord('9')))
-        alpha_num_range = alpha_range | num_range
-        case_offset = 97-65
-        is_pali = True
+
         print(set(range(ord('A'), ord('Z')+1)))
         print(set(range(ord('a'), ord('z')+1)))
         print(set(range(ord('0'), ord('9')+1)))
         # 'Was it a car or a cat I saw?'
         while i<j:
             # print(i, j)
-            if ord(s[i]) not in alpha_num_range:
+            if not s[i].isalnum():
                 i += 1
                 continue
-            if ord(s[j]) not in alpha_num_range:
+            if not s[j].isalnum():
                 j -= 1
                 continue
             print('abs(ord(s[i]) - ord(s[j])) == 32', abs(ord(s[i]) - ord(s[j])) == 32, ord(s[i]) - ord(s[j]))
             print('s[i] s[j]', s[i], s[j])
 
-            leftIsNum = ord(s[i]) in num_range
-            rightIsNum = ord(s[j]) in num_range
-            areBothNums = leftIsNum and rightIsNum
-
-            if areBothNums and ord(s[i]) != ord(s[j]):
-                    is_pali = False
-                    break
-
-            leftIsAlpha = ord(s[i]) in alpha_range
-            rightIsAlpha = ord(s[j]) in alpha_range
-            areBothAlpha = leftIsAlpha and rightIsAlpha
-
-            if areBothAlpha and abs(ord(s[i]) - ord(s[j])) != 32 and abs(ord(s[i]) - ord(s[j])) != 0:
-                is_pali = False
-                break
-
-            if (leftIsAlpha and rightIsNum) or (rightIsAlpha and leftIsNum):
-                is_pali = False
+            if s[i].lower() != s[j].lower():
+                return False
                 break
 
             i += 1
             j -= 1
 
-        print(is_pali)
-        return is_pali
+        # print(True)
+        return True
 
         
 
         
 
 # s = 'Was it a car or a cat I saw?'
-# s = "tab a cat"
-s = '0P'
+s = "tab a cat"
+# s = '0P'
 
 sol = Solution()
-sol.is_palindrome(s)
+print(sol.is_palindrome(s))
