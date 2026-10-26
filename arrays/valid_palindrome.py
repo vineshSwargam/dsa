@@ -47,3 +47,12 @@
 
 # Hint 3
 # A palindrome string is a string that is read the same from the start as well as from the end. This means the character at the start should match the character at the end at the same index. We can use the two pointer algorithm to do this efficiently.
+
+class Solution:
+    def is_palindrome(self, s: str) -> bool:
+        pass
+        
+
+s = 'Was it car or a cat I saw'?
+sol = Solution()
+sol.is_palindrome(s)
