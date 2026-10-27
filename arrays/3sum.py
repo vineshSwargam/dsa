@@ -67,8 +67,55 @@
 # Hint 5
 # When the current sum nums[j] + nums[k] == target add this pair to the result. We can move j or k pointer until j < k and the pairs are repeated. This ensures that no duplicate pairs are added to the result.
 
+from collections import defaultdict
+
 class Solution:
-    def threeSum(self, nums):
+
+    def using_hash(self, nums):
+        freq = defaultdict(int)
+        nums.sort()
+        print(nums)
+        nl = len(nums)
+        res = []
+
+        # freq dict
+        for num in nums:
+            freq[num] += 1
+
+        # i, j loop
+        for i, ni in enumerate(nums):
+            if ni > 0:
+                break
+
+            if i > 0  and ni == nums[i-1]:
+                continue
+
+            print('i -', i)
+            f = freq.copy()
+            for j in range(i+1, nl-1):
+                nj = nums[j]
+                f[nj] -= 1
+                if j > i+1 and nj == nums[j-1]:
+                    # print('skipping - ', nums[j], 'at index -', j, ' since nums[j-1] is - ', nums[j-1])
+                    continue
+                # print('j:', j)
+                # print('nums[j-1]:', nums[j-1], 'nj:', nj)
+                # print('==================')
+
+                tar = 0 - ni - nj
+
+                # find k in freq, then decrement k freq from freq dict
+                if tar >= nj and tar in f and f[tar] > 0:
+                    res.append((ni, nj, tar))
+                    f[tar] -= 1
+
+            # reset freq on j loop end
+
+
+        return res
+
+
+    def using_two_sum(self, nums):
         #[-1,0,1,2,-1,-4]
         nl = len(nums)
         nums.sort() # [-4, -1, -1, 0, 1, 2]
@@ -117,6 +164,12 @@ class Solution:
                 
         return res
 
+
+    def threeSum(self, nums):
+        # return self.using_two_sum(nums)
+        return self.using_hash(nums)
+        
+
         
 
 
@@ -125,6 +178,7 @@ sol = Solution()
 # nums = [-1,0,1,2,-1,-4] # Output: [[-1,-1,2],[-1,0,1]]
 
 # nums = [0,1,1] # Output: []
-nums = [-2, 0, 0, 2, 2]
-nums = [0,0,0] # [[0,0,0]]
+# nums = [-2, 0, 0, 2, 2]
+# nums = [0,0,0] # [[0,0,0]]
+nums = [-1,0,1,0] # [-1,0,1]
 print(sol.threeSum(nums))
