@@ -77,6 +77,5 @@ sol = Solution()
 
 # nums = [4,5,6]
 # target = 10 # Output: [0,2]
-nums = [5,5]
-target = 10 # Output: [0,1]
+nums, target = [5,5], 10 # Output: [0,1]
 print(sol.twoSum(nums, target))
