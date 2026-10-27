@@ -45,8 +45,73 @@
 # We can store the prefix maximum in an array by iterating from left to right and the suffix maximum in another array by iterating from right to left. For example, in [1, 5, 2, 3, 4], for the element 3, the prefix maximum is 5, and the suffix maximum is 4. Once these arrays are built, we can iterate through the array with index i and calculate the total water trapped at each position using the formula: min(prefix[i], suffix[i]) - height[i].
 
 class Solution:
-    def trap(self, height) -> int:
+    def using_pref_suf(self, height):
+        # lets write a stupid solution
+        hl = len(height)
+        max_ht = height[0]
+        pref_area = [0] * hl
+        suf_area = [0] * hl
+        area = 0
+
+        # [ 0, 2, 0, 3, 1, 0, 1, 3, 2, 1 ] 
+
+        for i in range(hl):
+            if height[i] == max_ht:
+                pref_area[i] = 0
+            elif height[i] > max_ht:
+                pref_area[i] = 0
+                max_ht = height[i]
+            else:
+                pref_area[i] = max_ht - height[i]
+
+        max_ht = height[hl-1]
+
+        for i in range(hl-1, -1, -1):
+            if height[i] == max_ht:
+                suf_area[i] = 0
+            elif height[i] > max_ht:
+                suf_area[i] = 0
+                max_ht = height[i]
+            else:
+                suf_area[i] = max_ht - height[i]
+
+        for i in range(hl):
+            area += min(pref_area[i], suf_area[i])
         
+        return area
+
+    
+    def using_two_pointers(self, height):
+        hl = len(height)
+        i = 0
+        j = hl-1
+        left_max = height[i]
+        right_max = height[j]
+        area = 0
+
+        while i<j:
+            if height[i] >= left_max:
+                left_max = height[i]
+
+            if height[j] >= right_max:
+                right_max = height[j]
+
+            if left_max <= right_max:
+                area += left_max - height[i]
+                i += 1
+            else:
+                area += right_max - height[j]
+                j -= 1
+
+        return area
+
+
+    def trap(self, height) -> int:
+        # return self.using_pref_suf(height)
+        return self.using_two_pointers(height)
+        
+            
+
 
 
 
@@ -55,4 +120,4 @@ sol = Solution()
 
 hts = [0,2,0,3,1,0,1,3,2,1] # Output: 9
 
-print(sol.max_area(hts))
+print(sol.trap(hts))
