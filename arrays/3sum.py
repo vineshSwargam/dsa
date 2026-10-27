@@ -73,12 +73,12 @@ class Solution:
         nl = len(nums)
         nums.sort() # [-4, -1, -1, 0, 1, 2]
         print(nums)
-        res = set()
+        res = []
         
         for (k, n) in enumerate(nums):
             # 0 -> -4
-            # if k > 0 and n == nums[k-1]:
-            #     continue
+            if k > 0 and n == nums[k-1]:
+                continue
             
             target = 0 - n # 4
             i = k+1
@@ -88,7 +88,6 @@ class Solution:
                 # i = 1
                 if nums[i] + nums[j] == target:
                     # found a triplet
-                    tup = None
                     # print('Nums -', nums[k], nums[i], nums[j])
 
                     # print('nums[i] <= nums[j] <= nums[k]', nums[i] <= nums[j] <= nums[k])
@@ -97,26 +96,13 @@ class Solution:
                     # print('nums[i] <= nums[k] <= nums[j]', nums[i] <= nums[k] <= nums[j])
                     # print('nums[k] <= nums[j] <= nums[i]', nums[k] <= nums[j] <= nums[i])
                     # print('nums[j] <= nums[i] <= nums[k]', nums[j] <= nums[i] <= nums[k])
-                    if nums[i] <= nums[j] <= nums[k]:
-                        tup = (nums[i], nums[j], nums[k])
-                    elif nums[j] <= nums[k] <= nums[i]:
-                        tup = (nums[j], nums[k], nums[i])
-                    elif nums[k] <= nums[i] <= nums[j]:
-                        tup = (nums[k], nums[i], nums[j])
-                    elif nums[i] <= nums[k] <= nums[j]:
-                        tup = (nums[i], nums[k], nums[j])
-                    elif nums[k] <= nums[j] <= nums[i]:
-                        tup = (nums[k], nums[j], nums[i])
-                    elif nums[j] <= nums[i] <= nums[k]:
-                        tup = (nums[j], nums[i], nums[k])
-                    else:
-                        print('Houston we have a problem!', nums[k], nums[i], nums[j])
-                        # print('Set - ', res)
 
-                    if tup not in res:
-                        res.add(tup)
-                    else:
-                        print(f'Tup {tup} already in set!')
+                    res.append([nums[k], nums[i], nums[j]])
+
+                    while nums[i] == nums[i+1] and i+1 < j:
+                        i += 1
+                    while nums[j] == nums[j-1] and i+1 < j:
+                        j -= 1
 
                     i += 1
                     j -= 1
@@ -129,7 +115,7 @@ class Solution:
                 
                 print('=========================')
                 
-        return [list(tup) for tup in res]
+        return res
 
         
 
@@ -139,6 +125,6 @@ sol = Solution()
 # nums = [-1,0,1,2,-1,-4] # Output: [[-1,-1,2],[-1,0,1]]
 
 # nums = [0,1,1] # Output: []
-
+nums = [-2, 0, 0, 2, 2]
 nums = [0,0,0] # [[0,0,0]]
 print(sol.threeSum(nums))
