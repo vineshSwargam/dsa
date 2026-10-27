@@ -20,21 +20,21 @@ from collections import defaultdict
 def k_freq(nums, k):
     # naive hash map solution
     # print(nums)
-    nums_dict = defaultdict(int)
+    # nums_dict = defaultdict(int)
 
-    for num in nums:
-        nums_dict[num] += 1
-    # 1, 2, 0, 3, 0, 0
+    # for num in nums:
+    #     nums_dict[num] += 1
+    # # 1, 2, 0, 3, 0, 0
 
-    result = []
-    s_f = sorted(nums_dict.items(), key=lambda pair: pair[1])
+    # result = []
+    # s_f = sorted(nums_dict.items(), key=lambda pair: pair[1])
 
-    # 0, 0, 0, 1, 2, 3
-    for n in s_f[-k:]:
-        result.append(n[0])
+    # # 0, 0, 0, 1, 2, 3
+    # for n in s_f[-k:]:
+    #     result.append(n[0])
 
-    print(s_f)
-    print(result)
+    # print(s_f)
+    # print(result)
 
     # bucket sort solution. Init an list of lists of len n, store num inside the list at index of freq n. if 3 appears 4 times, store it in the list, the list is at index=4, append 3 to the list at index 4
     
