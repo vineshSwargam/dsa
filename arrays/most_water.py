@@ -60,8 +60,25 @@
 # If heights[i] is smaller, then any future container using index i will have a smaller width, and its height is still at most heights[i]. So it cannot produce a larger area than the current pair. Therefore, we can safely discard the smaller height and move that pointer inward. The same logic applies when heights[j] is smaller.
 
 class Solution:
-    def max_area(self, hts):
-        pass
+    def max_area(self, heights):
+        nl = len(heights)
+        i = 0
+        j = nl-1
+        max_area = 0
+
+        while i<j:
+            av_ht = min(heights[i], heights[j])
+            av_wd = j - i
+            area = av_wd * av_ht
+            max_area = max(area, max_area)
+
+            if heights[j] <= heights[i]:
+                j -= 1
+            else:
+                i += 1
+        
+        return max_area
+
 
 
 
