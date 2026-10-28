@@ -50,7 +50,6 @@
 
 class Solution:
     def length_of_longest_substring(self, s: str) -> int:
-        str_set = set()
         sd = {}
         i = 0
         j = 0
@@ -59,28 +58,19 @@ class Solution:
         length = 0
 
         while j < sl:
-            if s[j] not in sd:
-                # str_set.add(s[j])
+            if s[j] in sd and sd[s[j]] >= i:
+                # reset found index
+                # reset i to new index
+                # reset length
+                last_found_ind = sd[s[j]] # abccbde - lfi 2, i 0, pop 1. pop - 1:i, so 1, 0
                 sd[s[j]] = j
+                i = last_found_ind + 1
                 j += 1
-                length = j-i
-                max_len = max(max_len, length)
                 continue
-            
-            # str_set.remove(s[i])
-            # reset found index
-            # reset i to new index
-            # reset length
-            last_found_ind = sd[s[j]] # abccbde - lfi 2, i 0, pop 1. pop - 1:i, so 1, 0
 
-            pop_ind = last_found_ind - 1
-            while pop_ind >= i:
-                sd.pop(s[pop_ind])
-                pop_ind -= 1
-            
             sd[s[j]] = j
-            i = last_found_ind + 1
             j += 1
+            max_len = max(max_len, j-i)
         
         return max_len
 
