@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vin's DSA Tracker</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0, 0, 0, 0.08);
+    --row-hover: rgba(0, 0, 0, 0.03);
+    --easy: #1f9d55;
+    --medium: #c77700;
+    --hard: #d70015;
+    --accent: #0071e3;
+    --done: #30d158;
+    --star: #ffcc00;
+    --icon: #8e8e93;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1c1c1e;
+      --text: #f5f5f7;
+      --muted: #98989d;
+      --line: rgba(255, 255, 255, 0.08);
+      --row-hover: rgba(255, 255, 255, 0.04);
+      --easy: #30d158;
+      --medium: #ff9f0a;
+      --hard: #ff453a;
+      --accent: #0a84ff;
+      --icon: #8e8e93;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 64px 16px 96px; }
+
+  /* Hero */
+  .eyebrow { color: var(--accent); font-weight: 600; font-size: 14px; letter-spacing: .02em; margin: 0 0 8px; }
+  h1 {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+    font-size: clamp(40px, 7vw, 64px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin: 0;
+  }
+  .sub { color: var(--muted); font-size: 19px; margin: 12px 0 40px; }
+
+  /* Progress */
+  .stats {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .stat .label { color: var(--muted); font-size: 13px; font-weight: 500; }
+  .stat .value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+  .stat .value small { font-size: 15px; font-weight: 500; color: var(--muted); }
+  .bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 12px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; border-radius: 3px; background: var(--accent); width: 0; transition: width .5s cubic-bezier(.2,.8,.2,1); }
+  .stat.easy .bar > span { background: var(--easy); }
+  .stat.medium .bar > span { background: var(--medium); }
+  .stat.hard .bar > span { background: var(--hard); }
+
+  /* Table */
+  .card { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+    user-select: none;
+  }
+  tbody td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr { transition: background .15s; }
+  tbody tr:hover { background: var(--row-hover); }
+  tbody tr.done .name { color: var(--muted); }
+  .c-status, .c-star { width: 64px; text-align: center; }
+  .c-diff { width: 120px; text-align: center; }
+  .c-sol { width: 90px; text-align: center; }
+  th.c-status, th.c-star, th.c-diff, th.c-sol { text-align: center; }
+
+  .sort { cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .sort:hover { color: var(--text); }
+  .sort svg { width: 10px; height: 10px; }
+
+  button.toggle {
+    border: 0; background: none; padding: 4px; cursor: pointer; line-height: 0;
+    border-radius: 50%; transition: transform .15s;
+  }
+  button.toggle:active { transform: scale(.85); }
+  button.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .status-icon { width: 20px; height: 20px; }
+  .status-icon circle { fill: none; stroke: var(--icon); stroke-width: 1.5; opacity: .6; transition: all .2s; }
+  .status-icon path { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .2s; }
+  tr.done .status-icon circle { fill: var(--done); stroke: var(--done); opacity: 1; }
+  tr.done .status-icon path { opacity: 1; }
+
+  .star-icon { width: 20px; height: 20px; }
+  .star-icon path { fill: none; stroke: var(--star); stroke-width: 1.6; stroke-linejoin: round; transition: fill .2s; }
+  tr.starred .star-icon path { fill: var(--star); }
+
+  .name { font-weight: 500; transition: color .2s; }
+  .ext { display: inline-flex; vertical-align: -2px; margin-left: 6px; color: var(--icon); }
+  .ext svg { width: 13px; height: 13px; }
+  a.ext:hover, a.sol:hover { color: var(--accent); }
+  span.ext, span.sol { opacity: .45; }
+
+  .pill {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .pill.Easy { color: var(--easy); background: color-mix(in srgb, var(--easy) 12%, transparent); }
+  .pill.Medium { color: var(--medium); background: color-mix(in srgb, var(--medium) 12%, transparent); }
+  .pill.Hard { color: var(--hard); background: color-mix(in srgb, var(--hard) 12%, transparent); }
+
+  .sol {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    color: var(--icon); background: var(--line);
+    transition: color .15s, background .15s;
+  }
+  .sol svg { width: 15px; height: 15px; }
+
+  /* Code viewer (tracker.html?file=...) */
+  body.viewing #tracker { display: none; }
+  #viewer { display: none; }
+  body.viewing #viewer { display: block; }
+  .back { color: var(--accent); text-decoration: none; font-weight: 500; font-size: 15px; }
+  .back:hover { text-decoration: underline; }
+  .viewer-title { font-size: clamp(28px, 5vw, 40px); margin: 12px 0 24px; }
+  .code-card { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+  .code-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+  }
+  .code-icon { width: 16px; height: 16px; flex: none; color: var(--icon); }
+  .code-name {
+    flex: 1; min-width: 0; font: 500 13px/1.2 ui-monospace, "SF Mono", Menlo, monospace;
+    color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .copy {
+    font: 500 12px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 0; border-radius: 999px; padding: 6px 12px; cursor: pointer;
+  }
+  pre.code {
+    margin: 0; padding: 16px 0; overflow-x: auto;
+    font: 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace;
+    counter-reset: line;
+  }
+  pre.code .ln { display: block; padding: 0 20px 0 0; white-space: pre; }
+  pre.code .ln::before {
+    counter-increment: line; content: counter(line);
+    display: inline-block; width: 3.5em; padding-right: 1.2em; margin-right: 0;
+    text-align: right; color: var(--muted); opacity: .5; user-select: none;
+  }
+  .missing { padding: 24px; color: var(--muted); }
+  /* Syntax colours (highlight.js classes) */
+  .hljs-keyword, .hljs-built_in { color: #ad3da4; }
+  .hljs-string { color: #c41a16; }
+  .hljs-number, .hljs-literal { color: #1c00cf; }
+  .hljs-comment { color: #5d6c79; font-style: italic; }
+  .hljs-title, .hljs-title.function_ { color: #326d74; }
+  .hljs-params { color: inherit; }
+  @media (prefers-color-scheme: dark) {
+    .hljs-keyword, .hljs-built_in { color: #ff7ab2; }
+    .hljs-string { color: #ff8170; }
+    .hljs-number, .hljs-literal { color: #d9c97c; }
+    .hljs-comment { color: #7f8c98; }
+    .hljs-title, .hljs-title.function_ { color: #6bdfff; }
+  }
+
+  footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 24px; }
+  footer button { font: inherit; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 0; }
+
+  @media (max-width: 640px) {
+    .wrap { padding-top: 40px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stat.total { grid-column: 1 / -1; }
+    .c-status, .c-star { width: 40px; }
+    .c-diff { width: 84px; }
+    .c-sol { width: 52px; }
+    thead th, tbody td { padding-left: 6px; padding-right: 6px; }
+    .name { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="viewer">
+  <a class="back" href="tracker.html">‹ Vin's DSA Tracker</a>
+  <h1 class="viewer-title" id="viewer-title"></h1>
+  <div class="code-card">
+    <div class="code-head">
+      <svg class="code-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 4L2 8l3.5 4M10.5 4L14 8l-3.5 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="code-name" id="code-name"></span>
+      <button class="copy" id="copy" type="button">Copy</button>
+    </div>
+    <pre class="code" id="code"></pre>
+  </div>
+</div>
+
+<div class="wrap" id="tracker">
+  <p class="eyebrow">NeetCode 150</p>
+  <h1>Vin's DSA Tracker</h1>
+  <p class="sub">One problem at a time.</p>
+
+  <section class="stats">
+    <div class="stat total">
+      <div class="label">Solved</div>
+      <div class="value"><span id="solved">0</span> <small>/ <span id="total">0</span></small></div>
+      <div class="bar"><span id="bar-total"></span></div>
+    </div>
+    <div class="stat easy">
+      <div class="label">Easy</div>
+      <div class="value" id="easy">0</div>
+      <div class="bar"><span id="bar-easy"></span></div>
+    </div>
+    <div class="stat medium">
+      <div class="label">Medium</div>
+      <div class="value" id="medium">0</div>
+      <div class="bar"><span id="bar-medium"></span></div>
+    </div>
+    <div class="stat hard">
+      <div class="label">Hard</div>
+      <div class="value" id="hard">0</div>
+      <div class="bar"><span id="bar-hard"></span></div>
+    </div>
+  </section>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th class="c-status">Status</th>
+          <th class="c-star">Star</th>
+          <th>Problem</th>
+          <th class="c-diff"><span class="sort" id="sort-diff" title="Sort by difficulty">Difficulty
+            <svg viewBox="0 0 10 10"><path d="M2 4l3-3 3 3M2 6l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span></th>
+          <th class="c-sol">Solution</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>Progress is saved in this browser. <button id="reset" type="button">Reset to defaults</button></footer>
+</div>
+
+<!-- Solution sources. Filled in by sync_tracker.py; re-run it after editing a solution. -->
+<script id="sources" type="application/json">{"../arrays/two_sum.py": "# Two Sum\n# Easy\n# Topics\n# Company Tags\n# Hints\n# Given an array of integers nums and an integer target, return the indices i and j such that nums[i] + nums[j] == target and i != j.\n\n# You may assume that every input has exactly one pair of indices i and j that satisfy the condition.\n\n# Return the answer with the smaller index first.\n\n# Example 1:\n\n# Input: \n# nums = [3,4,5,6], target = 7\n\n# Output: [0,1]\n# Explanation: nums[0] + nums[1] == 7, so we return [0, 1].\n\n# Example 2:\n\n# Input: nums = [4,5,6], target = 10\n\n# Output: [0,2]\n# Example 3:\n\n# Input: nums = [5,5], target = 10\n\n# Output: [0,1]\n# Constraints:\n\n# 2 <= nums.length <= 1000\n# -10,000,000 <= nums[i] <= 10,000,000\n# -10,000,000 <= target <= 10,000,000\n# Only one valid answer exists.\n\n\n# Topics\n\n \n\n# Recommended Time & Space Complexity\n# You should aim for a solution with O(n) time and O(n) space, where n is the size of the input array.\n\n\n# Hint 1\n# A brute force solution would be to check every pair of numbers in the array. This would be an O(n^2) solution. Can you think of a better way? Maybe in terms of mathematical equation?\n\n\n# Hint 2\n# Given, We need to find indices i and j such that i != j and nums[i] + nums[j] == target. Can you rearrange the equation and try to fix any index to iterate on?\n\n\n# Hint 3\n# we can iterate through nums with index i. Let difference = target - nums[i] and check if difference exists in the hash map as we iterate through the array, else store the current element in the hashmap with its index and continue. We use a hashmap for O(1) lookups.\n\n\nfrom collections import defaultdict\n\nclass Solution:\n    def twoSum(self, numbers, target: int):\n        diff_d = defaultdict(int)\n\n        # [3,4,5,6]\n        for (i, n) in enumerate(nums):\n            diff = target - n\n\n            if diff in diff_d:\n                return [diff_d[diff], i]\n            diff_d[n] = i\n\n\n\nsol = Solution()\n# nums = [3,4,5,6]\n# target = 7 # Output: [0,1]\n\n# nums = [4,5,6]\n# target = 10 # Output: [0,2]\nnums, target = [5,5], 10 # Output: [0,1]\nprint(sol.twoSum(nums, target))\n", "../arrays/k_frequent.py": "# https://neetcode.io/problems/top-k-elements-in-list/question?list=neetcode150\n# 1 <= nums.length <= 10^4.\n# -1000 <= nums[i] <= 1000\n# 1 <= k <= number of distinct elements in nums\n\n# Example 1:\n\n# Input: nums = [1,2,2,3,3,3], k = 2\n\n# Output: [2,3]\n# Example 2:\n\n# Input: nums = [7,7], k = 1\n\n# Output: [7]\n# git remote add origin git@github-personal.com:/leet.git\n\nfrom collections import defaultdict\n\ndef k_freq(nums, k):\n    # naive hash map solution\n    # print(nums)\n    # nums_dict = defaultdict(int)\n\n    # for num in nums:\n    #     nums_dict[num] += 1\n    # # 1, 2, 0, 3, 0, 0\n\n    # result = []\n    # s_f = sorted(nums_dict.items(), key=lambda pair: pair[1])\n\n    # # 0, 0, 0, 1, 2, 3\n    # for n in s_f[-k:]:\n    #     result.append(n[0])\n\n    # print(s_f)\n    # print(result)\n\n    # bucket sort solution. Init an list of lists of len n, store num inside the list at index of freq n. if 3 appears 4 times, store it in the list, the list is at index=4, append 3 to the list at index 4\n    \n    count = defaultdict(list)\n    freq = [[] for i in range(len(nums) + 1)]\n\n    for ind, num in enumerate(nums):\n        count[num].append(ind)\n    for num, idxs in count.items():\n        freq[len(idxs)].append((num, idxs))\n\n    res = []\n    for i in range(len(freq) - 1, 0, -1):\n        for num in freq[i]:\n            res.append(num[1])\n            if len(res) == k:\n                print(res)\n                return res\n\n\n\n\n\nk_freq([1, 3, 4, 3, 2, 2, 5, 2], 2)\nk_freq([1,2], 2)\n\n\n", "../arrays/encode_decode.py": "class Solution:\n    def encode(self, strs) -> str:\n        encoded_str = \"\".join(f'{len(s)}#{s}' for s in strs)\n        # print('encoded - ', encoded_str)\n        return encoded_str\n        \n\n    def decode(self, s: str):\n        res = []\n        i = 0\n        j = 0\n        collecting = False\n        strs = []\n        # - 5#Hello5#World\n        # - 10#Superwoman8#Superman\n        #  s = 14\n\n        while i<len(s):\n            j = s.index('#', i) # index of hashtag - 2\n            word_len = int(s[i:j]) # 0:2 = 10\n            i = word_len + j + 1  # 10 + 2 + 1\n            strs.append(s[j+1:j+word_len+1])\n\n        print('dec - ', strs)\n        return strs\n\n\ndef test_encode_decode(strs):\n    sol = Solution()\n    s = sol.encode(strs)\n    # print(s)\n    ds = sol.decode(s)\n    # print(ds)\n\n\n\ntest_encode_decode([\"Hello\", \"World\"])\ntest_encode_decode([\"\"])\ntest_encode_decode([])", "../arrays/product.py": "# Products of Array Except Self\n# Medium\n# Topics\n# Company Tags\n# Hints\n# Given an integer array nums, return an array output where output[i] is the product of all the elements of nums except nums[i].\n\n# Each product is guaranteed to fit in a 32-bit integer.\n\n# Follow-up: Could you solve it in O(n) time without using the division operation?\n\n# Example 1:\n\n# Input: nums = [1,2,4,6]\n\n# Output: [48,24,12,8]\n# Example 2:\n\n# Input: nums = [-1,0,1,2,3]\n\n# Output: [0,-6,0,0,0]\n# Constraints:\n\n# 2 <= nums.length <= 100,000\n# -30 <= nums[i] <= 30\n# The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer.\n\n\n# Topics\n\n \n\n# Recommended Time & Space Complexity\n# You should aim for a solution as good or better than O(n) time and O(n) space, where n is the size of the input array.\n\n\n# Hint 1\n# A brute-force solution would be to iterate through the array with index i and compute the product of the array except for that index element. This would be an O(n^2) solution. Can you think of a better way?\n\n\n# Hint 2\n# Is there a way to avoid the repeated work? Maybe we can store the results of the repeated work in an array.\n\n\n# Hint 3\n# We can use the prefix and suffix technique. First, we iterate from left to right and store the prefix products for each index in a prefix array, excluding the current index's number. Then, we iterate from right to left and store the suffix products for each index in a suffix array, also excluding the current index's number. Can you figure out the solution from here?\n\n\n# Hint 4\n# We can use the stored prefix and suffix products to compute the result array by iterating through the array and simply multiplying the prefix and suffix products at each index. -->\n\n\nclass Solution:\n    def product_except_self(self, nums):\n        # prod = 1\n        # prod_zero = 1\n        # zero_counter = 0\n        # zero_index = []\n        # for i, n in enumerate(nums):\n        #     if n == 0:\n        #         zero_index.append(i)\n        #         zero_counter += 1\n        #         prod = 0\n        #         if zero_counter > 1:\n        #             prod_zero = 0\n        #             break\n                \n        #         continue\n            \n        #     prod *= n\n        #     prod_zero *= n\n\n        # if prod_zero == 0:\n        #     return [0]*len(nums)\n\n        # res = []\n        # for i, n in enumerate(nums):\n        #     if i in zero_index:\n        #         res.append(prod_zero)\n        #     else:\n        #         res.append(int(prod/n))\n        \n        # return res\n\n        # two pointer trial\n\n        # n = len(nums) # 5\n        # ltr_prod = []\n        # rtl_prod = [1]*n\n        # i = 0\n        # j=n-1\n        # print(nums)\n\n        # while i<n and j>=0: # 0, 4\n        #     if i > 0:\n        #         l_prod = ltr_prod[i-1] # get last computed prod val till this index\n        #     else:\n        #         l_prod = 1 # no prod values exist in the array yet\n\n        #     ltr_prod.append(l_prod*nums[i]) # multiply curr val with last known prod val\n            \n        #     if j < n-1:\n        #         r_prod = rtl_prod[j+1] # get last computed prod val till this index\n        #     else:\n        #         r_prod = 1 # no prod values exist in the array yet\n\n        #     rtl_prod[j] = r_prod*nums[j] # multiply curr val with last known prod val\n\n        #     i+=1\n        #     j-=1\n        \n        # res = []\n        # for ind in range(n):\n        #     prod = 1\n        #     if ind-1<0:\n        #         prod = rtl_prod[ind+1]\n        #     elif ind+1 >= n:\n        #         prod = ltr_prod[ind-1]\n        #     else:\n        #         prod = ltr_prod[ind-1] * rtl_prod[ind+1]\n            \n        #     res.append(prod)\n\n        # return res\n\n        # optimised prefix postfix\n        n = len(nums)\n        res = [0]*n\n        prefix = 1\n        for i in range(n):\n            res[i] = prefix\n            prefix *= nums[i]\n        \n        postfix = 1\n        for i in range(n-1, -1, -1):\n            res[i] *= postfix\n            postfix *= nums[i]\n\n        return res\n\n\n\nsol = Solution()\nprint(sol.product_except_self([1, 2, 3, 4, 5]))\n# print(sol.product_except_self([1, 2, 4, 6, 0]))\n# print(sol.product_except_self([-1,0,1,2,3]))\n", "../arrays/valid_sudoku.py": "# You are given a 9 x 9 Sudoku board board. A Sudoku board is valid if the following rules are followed:\n\n# Each row must contain the digits 1-9 without duplicates.\n# Each column must contain the digits 1-9 without duplicates.\n# Each of the nine 3 x 3 sub-boxes of the grid must contain the digits 1-9 without duplicates.\n# Return true if the Sudoku board is valid, otherwise return false\n\n# Note: A board does not need to be full or be solvable to be valid.\n\n# Input: board =\n# [[\"1\",\"2\",\".\",\".\",\"3\",\".\",\".\",\".\",\".\"],\n#  [\"4\",\".\",\".\",\"5\",\".\",\".\",\".\",\".\",\".\"],\n#  [\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\".\",\"3\"],\n#  [\"5\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"4\"],\n#  [\".\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"5\"],\n#  [\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],\n#  [\".\",\".\",\".\",\".\",\".\",\".\",\"2\",\".\",\".\"],\n#  [\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"8\"],\n#  [\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]\n\n# Output: true\n# Example 2:\n\n# Input: board =\n# [[\"1\",\"2\",\".\",\".\",\"3\",\".\",\".\",\".\",\".\"],\n#  [\"4\",\".\",\".\",\"5\",\".\",\".\",\".\",\".\",\".\"],\n#  [\".\",\"9\",\"1\",\".\",\".\",\".\",\".\",\".\",\"3\"],\n#  [\"5\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"4\"],\n#  [\".\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"5\"],\n#  [\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],\n#  [\".\",\".\",\".\",\".\",\".\",\".\",\"2\",\".\",\".\"],\n#  [\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"8\"],\n#  [\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]\n\n# Output: false\n# Explanation: There are two 1's in the top-left 3x3 sub-box.\n\n# Constraints:\n\n# board.length == 9\n# board[i].length == 9\n# board[i][j] is a digit 1-9 or '.'.\n\n\n# Topics\n\n  \n\n# Recommended Time & Space Complexity\n# You should aim for a solution as good or better than O(n^2) time and O(n^2) space, where n is the number of rows in the square grid.\n\n\n# Hint 1\n# Which data structure would you prefer to use for checking duplicates?\n\n\n# Hint 2\n# You can use a hash set for every row and column to check duplicates. But how can you efficiently check for the squares?\n\n\n# Hint 3\n# We can find the index of each square by the equation (row / 3) * 3 + (col / 3). Then we use hash set for O(1) lookups while inserting the number into its row, column and square it belongs to. We use separate hash maps for rows, columns, and squares.\n\nfrom collections import defaultdict\n\n\nclass Solution:\n    def is_valid_sudoku(self, board) -> bool:\n        row_set = set()\n        col_set = defaultdict(set)\n        grid_set_one = set()\n        grid_set_two = set()\n        grid_set_three = set()\n\n        for i in range(9):\n            if i == 3 or i == 6:\n                grid_set_one.clear()\n                grid_set_two.clear()\n                grid_set_three.clear()\n\n            for j in range(9):\n                row_val = board[i][j]\n\n                if row_val == '.':\n                    continue\n\n                if row_val in row_set:\n                    print(f'Found duplicate in row/col set - {i},{j} - val - {row_val}')\n                    print('row_set -', row_set)\n                    return False\n\n                print(f'Adding row val {i}, {j} to row_set - {row_val}')\n                row_set.add(row_val)\n\n                if j < 3:\n                    if row_val in grid_set_one:\n                        print(f'Found duplicate in grid_set_one - {i},{j} - val - {row_val}')\n                        return False\n\n                    print(f'Adding grid val {i}, {j} to grid_set_one - {row_val}')\n                    grid_set_one.add(row_val)\n\n                elif j >= 3 and j < 6:\n                    if row_val in grid_set_two:\n                        print(f'Found duplicate in grid_set_two - {i},{j} - val - {row_val}')\n                        return False\n\n                    print(f'Adding grid val {i}, {j} to grid_set_two - {row_val}')\n                    grid_set_two.add(row_val)\n                \n                elif j >= 6 and j < 9:\n                    if row_val in grid_set_three:\n                        print(f'Found duplicate in grid_set_three - {i},{j} - val - {row_val}')\n                        return False\n\n                    print(f'Adding grid val {i}, {j} to grid_set_three - {row_val}')\n                    grid_set_three.add(row_val)\n\n                # print('======== Entering Col checks =========', row_val)\n                if row_val in col_set[j]:\n                    print(f'Found duplicate in row/col set - {i},{j} - val - {row_val}')\n                    print(f'col_set-{j} -', col_set[j])\n                    return False\n\n                print(f'Adding col val {i}, {j} to col_set - {row_val}')\n                col_set[j].add(row_val)\n                print(f'col_set[{j}] -', col_set[j])\n            \n            row_set.clear()\n\n        return True      \n\n\nsol = Solution()\n# true\nb1 = [\n    [\"1\",\"2\",\".\",\".\",\"3\",\".\",\".\",\".\",\".\"],\n    [\"4\",\".\",\".\",\"5\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\".\",\"3\"],\n    [\"5\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"4\"],\n    [\".\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"5\"],\n    [\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\"2\",\".\",\".\"],\n    [\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"8\"],\n    [\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]\n]\n# false\nb2 = [\n    [\"1\",\"2\",\".\",\".\",\"3\",\".\",\".\",\".\",\".\"],\n    [\"4\",\".\",\".\",\"5\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\"9\",\"1\",\".\",\".\",\".\",\".\",\".\",\"3\"],\n    [\"5\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"4\"],\n    [\".\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"5\"],\n    [\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\"2\",\".\",\".\"],\n    [\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"8\"],\n    [\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]\n]\n# false\nb3 = [\n    [\".\",\".\",\"4\",\".\",\".\",\".\",\"6\",\"3\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\"5\",\".\",\".\",\".\",\".\",\".\",\".\",\"9\",\".\"],\n    [\".\",\".\",\".\",\"5\",\"6\",\".\",\".\",\".\",\".\"],\n    [\"4\",\".\",\"3\",\".\",\".\",\".\",\".\",\".\",\"1\"],\n    [\".\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\"5\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"]\n]\n# false\nb4 = [\n    [\".\",\".\",\".\",\"9\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\"9\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"],\n    [\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\",\".\"]\n]\nprint(sol.is_valid_sudoku(b4))\n        ", "../arrays/largest_consecutive_seq.py": "# Longest Consecutive Sequence\n# Medium\n# Topics\n# Company Tags\n# Hints\n# Given an array of integers nums, return the length of the longest consecutive sequence of elements that can be formed.\n\n# A consecutive sequence is a sequence of elements in which each element is exactly 1 greater than the previous element. The elements do not have to be consecutive in the original array.\n\n# You must write an algorithm that runs in O(n) time.\n\n# Example 1:\n\n# Input: nums = [2,20,4,10,3,4,5]\n\n# Output: 4\n# Explanation: The longest consecutive sequence is [2, 3, 4, 5].\n\n# Example 2:\n\n# Input: nums = [0,3,2,5,4,6,1,1]\n\n# Output: 7\n# Constraints:\n\n# 0 <= nums.length <= 100,000\n# -10^9 <= nums[i] <= 10^9\n\n# Topics\n\n  \n\n# Recommended Time & Space Complexity\n# You should aim for a solution as good or better than O(n) time and O(n) space, where n is the size of the input array.\n\n\n# Hint 1\n# A brute force solution would be to consider every element from the array as the start of the sequence and count the length of the sequence formed with that starting element. This would be an O(n^2) solution. Can you think of a better way?\n\n\n# Hint 2\n# Is there any way to identify the start of a sequence? For example, in [1, 2, 3, 10, 11, 12], only 1 and 10 are the beginning of a sequence. Instead of trying to form a sequence for every number, we should only consider numbers like 1 and 10.\n\n\n# Hint 3\n# We can consider a number num as the start of a sequence if and only if num - 1 does not exist in the given array. We iterate through the array and only start building the sequence if it is the start of a sequence. This avoids repeated work. We can use a hash set for O(1) lookups by converting the array to a hash set.\n\nfrom math import floor\nfrom collections import defaultdict\nfrom largest_consecutive_fixture import l0\n\ndef merge_sort(nums):\n    n = len(nums)\n    if n <= 1:\n        return nums\n\n    mid = floor(n/2)\n    ll = nums[0:mid]\n    rl = nums[mid:n]\n    ml = []\n\n    print('ll - ', ll)\n    print('rl - ', rl)\n    print(\"ENTERING RECURSION\")\n\n    ll = merge_sort(ll)\n    print('After Rec - rl - ', rl)\n    rl = merge_sort(rl)\n    # print('AFter Rec - ll - ', ll)\n    # print('After Rec - ml - ', ml)\n    \n    lll = mid\n    rll = n - mid\n    lli = 0\n    rli = 0\n    print(f'length lll - {lll}, rll = {rll}')\n\n    while lli < lll and rli < rll:\n        left = ll[lli]\n        right = rl[rli]\n        # print(f'{left} <= {right}')\n        if left <= right:\n            # print(f'left is lesser')\n            ml.append(left)\n            lli += 1\n        else:\n            # print(f'right is lesser')\n            ml.append(right)\n            rli += 1\n    \n    while lli < lll:\n        ml.append(ll[lli])\n        lli += 1\n\n    while rli < rll:\n        ml.append(rl[rli])\n        rli += 1\n\n    print('ml - ', ml)\n    print(\"EXITING RECURSION\")\n    print(\"======================\")\n    return ml\n\n\n\n# l1 = [ 5, 2, 4, 3, 1]\n# l1 = [2, 5, 4, 1, 3]\n# print(l1)\n# merge_sort(l1)\n\nclass Solution:\n    def using_merge_sort(self, nums):\n        s_nums = merge_sort(nums)\n        nl = len(s_nums)\n        if nl < 1:\n            return 0\n        count = 1\n        max_count = 1\n        print('length - ', nl)\n        for i, num in enumerate(s_nums):\n            if i+1 > nl-1:\n                break\n            print(f'index-{i} - {s_nums[i+1]} minus {num}')\n            print(f'subtraction - {s_nums[i+1] - num}')\n            next_diff = s_nums[i+1] - num\n            if next_diff == 1:\n                count +=1\n                max_count = count if count > max_count else max_count\n            elif next_diff == 0:\n                continue\n            else:\n                count = 1\n            print('Count -', count)\n\n        print(max_count)\n        return max_count\n\n    def using_hash_map(self, nums):\n        seq = defaultdict(lambda: [set(), int, int])\n        # s = { 1 }\n        # print(s.add(2))\n        # return\n\n        for n in nums:\n            # print('N = ', n)\n            if n in seq:\n                continue\n\n            if n-1 not in seq and n+1 not in seq:\n                seq[n] = [{n}, None, n]\n                print('Seq - ', seq)\n                continue\n\n            if n-1 in seq and n+1 in seq:\n                lb_key = seq[n-1][1] if seq[n-1][1] != None else n-1\n                ub_key = seq[n+1][1] if seq[n+1][1] != None else n+1\n                # print(\"BOTH in sequence. lbkey -\", lb_key, \"ub_key -\", ub_key)\n\n                #  UNION OF BOTH SETS\n                seq[lb_key][0] = seq[lb_key][0] | {n} | seq[ub_key][0]\n\n                # Point UB Starter to LB as it is new starter of union sequence\n                ub_seq_end = seq[ub_key][2]\n                seq[ub_seq_end][1] = lb_key\n                # take the max of ub\n                seq[lb_key][2] = ub_seq_end\n                print('LB key -', lb_key, 'UB key -', ub_key)\n                print('Seq LB and UB - ', seq[lb_key], seq[ub_key])\n\n                continue\n            \n            if n-1 in seq:\n                starter_key = seq[n-1][1] if seq[n-1][1] != None else n-1\n                seq[n] = [{n}, starter_key, n]\n\n                seq[starter_key][0].add(n)\n                seq_max = seq[starter_key][2]\n                if n > seq_max:\n                    seq[starter_key][2] = n\n                print('In n-1 -', n-1, n, starter_key)\n                if starter_key == n-1:\n                    print('N-1 is the starter')\n                    print('Seq n and n-1 - ', seq[n], seq[n-1])\n                else:\n                    print('N-1 has a starter - ', starter_key)\n                    print('Seq n, n-1, and starter - ', seq[n], seq[n-1], seq[starter_key])\n                    \n            if n+1 in seq:\n                # if seq[n+1][1] != None:\n                    # print('Houston we have a problem! - ', n)\n                new_set = seq[n+1][0]\n                new_set.add(n)\n                seq[n] = [new_set, None, seq[n+1][2]]\n                seq[n+1][1] = n\n\n                ub_seq_end = seq[n+1][2]\n                seq[ub_seq_end][1] = n\n                # take the max of ub\n                seq[n][2] = ub_seq_end\n                print('In n+1 loop -', n, n+1)\n                print('So n will become the starter for n+1')\n                print('Seq n and n+1 - ', seq[n], seq[n+1])\n\n            # print('Seq - ', seq)\n\n        max_seq_len = 0\n        for s in seq.values():\n            seq_len = len(s[0])\n            if seq_len > max_seq_len:\n                max_seq_len = seq_len\n\n            \n        return max_seq_len\n    \n    def using_set_while(self, nums):\n        length = 0\n        max_len = 0\n        num_set = set(nums)\n\n        for n in nums:\n            if n-1 not in num_set:\n                length = 1\n                n += 1\n                while n in num_set:\n                    length += 1\n                    n += 1\n                    if length > max_len:\n                        max_len = length\n\n        return max_len\n\n\n    def longest_consecutive(self, nums) -> int:\n        # return self.using_merge_sort(nums)\n        # return self.using_hash_map(nums)\n        return self.using_set_while(nums)\n        \n        # [0,3,2,5,4,6,1,1]\n        # check if n-1 exists\n        # if not, then this is seq starter\n        # add it to a hash set { [n]: {n}}\n        # { 0: {0}}\n        # { 0: {0}, 3: {3} }\n        # { 0: {0}, 3: {3} }\n        # { 0: {0}, 2: ({2, 3}, None), 3: ({3}, 2) }\n        # { 0: 1, 2: {2, 3}, 3: ({3}, 2), 5: {5} }\n        # while obj[n-1][1] != None: obj[obj[n-1][1]] = obj[obj[n-1][1]][0].add(n)\n        # \n        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }\n        # { 0: 1, 2: {2, 3, 4}, 3: {2, 3, 4}, 4: {2, 3, 4} 5: {5} }\n        ####################################\n        #                              starter is 1, max is 2\n\n        \n\n        \n\nsol = Solution()\n# l1 = [0,3,2,5,4,6,1,1] # 7\nl2 = [2,20,4,10,3,4,5] # - 4\n# l1 = [0,3,7,2,5,8,4,6,0,1] # - 8\n\n# l2 = [2, 3, 1, 5, 4, 0]\n# l2 = [2, 3, 5, 1, 4, 0]\n# l2 = [2, 5, 3, 1, 4, 0]\n# l2 = [3, 2, 1, 5, 4, 0]\n# l2 = [3, 2, 5, 1, 4, 0]\n# l2 = [3, 5, 2, 1, 4, 0]\n# l2 = [5, 2, 3, 1, 4, 0]\n# l2 = [5, 3, 2, 1, 4, 0]\n# print(l2)\nprint(sol.longest_consecutive(l0))", "../arrays/valid_palindrome.py": "# Valid Palindrome\n# Easy\n# Topics\n# Company Tags\n# Hints\n# Given a string s, return true if it is a palindrome, otherwise return false.\n\n# A palindrome is a string that reads the same forward and backward. It is also case-insensitive and ignores all non-alphanumeric characters.\n\n# Note: Alphanumeric characters consist of letters (A-Z, a-z) and numbers (0-9).\n\n# Example 1:\n\n# Input: s = \"Was it a car or a cat I saw?\"\n\n# Output: true\n# Explanation: After considering only alphanumerical characters we have \"wasitacaroracatisaw\", which is a palindrome.\n\n# Example 2:\n\n# Input: s = \"tab a cat\"\n\n# Output: false\n# Explanation: \"tabacat\" is not a palindrome.\n\n# Constraints:\n\n# 1 <= s.length <= 1000\n# s is made up of only printable ASCII characters.\n\n\n# Topics\n\n \n\n# Recommended Time & Space Complexity\n# You should aim for a solution with O(n) time and O(1) space, where n is the length of the input string.\n\n\n# Hint 1\n# A brute force solution would be to create a copy of the string, reverse it, and then check for equality. This would be an O(n) solution with extra space. Can you think of a way to do this without O(n) space?\n\n\n# Hint 2\n# Can you find the logic by observing the definition of pallindrome or from the brute force solution?\n\n\n# Hint 3\n# A palindrome string is a string that is read the same from the start as well as from the end. This means the character at the start should match the character at the end at the same index. We can use the two pointer algorithm to do this efficiently.\n\nclass Solution:\n    def using_rev_str(self, s: str) -> bool:\n        s_len = len(s)\n        if s_len == 1:\n            return True\n        clean_s = ''\n        rev_s = ''\n        alpha_num_range = set(range(ord('A'), ord('Z')+1)) | set(range(ord('a'), ord('z'))) | set(range(ord('0'), ord('9')))\n        print(alpha_num_range)\n        print(s, s_len)\n\n        for i in range(s_len-1, -1, -1):\n            rev_i = s_len-i-1\n            if ord(s[rev_i]) in alpha_num_range:\n                clean_s+= s[rev_i] if i >= 0 else ''\n            \n            if ord(s[i]) not in alpha_num_range:\n                print('Ignoring - ', s[i])\n                continue\n            rev_s += s[i]\n\n        print(rev_s, clean_s)\n        if rev_s == clean_s:\n            return True\n        return False\n\n\n    def is_palindrome(self, s: str) -> bool:\n        # return self.using_rev_str(s)\n        i = 0\n        j = len(s) - 1\n        if j==0:\n            return True\n\n        print(set(range(ord('A'), ord('Z')+1)))\n        print(set(range(ord('a'), ord('z')+1)))\n        print(set(range(ord('0'), ord('9')+1)))\n        # 'Was it a car or a cat I saw?'\n        while i<j:\n            # print(i, j)\n            if not s[i].isalnum():\n                i += 1\n                continue\n            if not s[j].isalnum():\n                j -= 1\n                continue\n            print('abs(ord(s[i]) - ord(s[j])) == 32', abs(ord(s[i]) - ord(s[j])) == 32, ord(s[i]) - ord(s[j]))\n            print('s[i] s[j]', s[i], s[j])\n\n            if s[i].lower() != s[j].lower():\n                return False\n                break\n\n            i += 1\n            j -= 1\n\n        # print(True)\n        return True\n\n        \n\n        \n\n# s = 'Was it a car or a cat I saw?'\ns = \"tab a cat\"\n# s = '0P'\n\nsol = Solution()\nprint(sol.is_palindrome(s))", "../arrays/two_int_sum_ii.py": "# Two Integer Sum II\n# Medium\n# Topics\n# Company Tags\n# Hints\n# Given an array of integers numbers that is sorted in non-decreasing order.\n\n# Return the indices (1-indexed) of two numbers, [index1, index2], such that they add up to a given target number target and index1 < index2. Note that index1 and index2 cannot be equal, therefore you may not use the same element twice.\n\n# There will always be exactly one valid solution.\n\n# Your solution must use \n# O(1) additional space.\n\n# Example 1:\n\n# Input: numbers = [1,2,3,4], target = 3\n\n# Output: [1,2]\n# Explanation:\n# The sum of 1 and 2 is 3. Since we are assuming a 1-indexed array, index1 = 1, index2 = 2. We return [1, 2].\n\n# Constraints:\n\n# 2 <= numbers.length <= 30000\n# -1000 <= numbers[i] <= 1000\n# -1000 <= target <= 1000\n\n\n# Topics\n\n# Recommended Time & Space Complexity\n# You should aim for a solution with O(n) time and O(1) space, where n is the size of the input array.\n\n\n# Hint 1\n# A brute force solution would be to check every pair of numbers in the array. This would be an O(n^2) solution. Can you think of a better way?\n\n\n# Hint 2\n# Can you think of an algorithm by taking the advantage of array being sorted?\n\n\n# Hint 3\n# We can use the two-pointer algorithm. If nums[0] + nums[n-1] > target, then we know nums[n - 1] can not possibly be included in any pairs. Why? Because nums[n - 1] is the largest element in the array. Even by adding it with nums[0], which is the smallest element, we still exceed the target. You can think of the case when nums[0] + nums[n - 1] < target.\n\n\n# Hint 4\n# We keep two pointers, one at the start and the other at the end of the array. If the sum of the numbers at the two pointers is greater than the target, decrement the right pointer, else increment the left pointer. Repeat this process until you find a valid pair.\n\nclass Solution:\n    def twoSum(self, numbers, target):\n        i = 0\n        j = len(numbers) - 1\n\n        while i<j:\n            sum = numbers[i]+numbers[j]\n            if sum == target:\n                return [i+1, j+1]\n            if sum > target:\n                j -= 1\n            else:\n                i += 1\n        \n\nsol = Solution()\n# nums = [3,4,5,6]\n# target = 7 # Output: [0,1]\n\n# nums = [1,2,3,4,5]\n# target = 5 # Output: [0,1]\n\nnums = [1,2,3,4]\ntarget = 3 # Output: [0,2]\n\n# nums = [1,2,3,5,6,7]\n# target = 5 # Output: [0,1]\n\n# nums = [4,5,6]\n# target = 10 # Output: [0,2]\n\n# nums = [5,5]\n# target = 10 # Output: [0,1]\nprint(sol.twoSum(nums, target))\n        \n", "../arrays/3sum.py": "# 3Sum\n# Medium\n# Topics\n# Company Tags\n# Hints\n# Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] where nums[i] + nums[j] + nums[k] == 0, and the indices i, j and k are all distinct.\n\n# The output should not contain any duplicate triplets. You may return the output and the triplets in any order.\n\n# Example 1:\n\n# Input: nums = [-1,0,1,2,-1,-4]\n\n# Output: [[-1,-1,2],[-1,0,1]]\n# Explanation:\n# nums[0] + nums[1] + nums[2] = (-1) + 0 + 1 = 0.\n# nums[1] + nums[2] + nums[4] = 0 + 1 + (-1) = 0.\n# nums[0] + nums[3] + nums[4] = (-1) + 2 + (-1) = 0.\n# The distinct triplets are [-1,0,1] and [-1,-1,2].\n\n# Example 2:\n\n# Input: nums = [0,1,1]\n\n# Output: []\n# Explanation: The only possible triplet does not sum up to 0.\n\n# Example 3:\n\n# Input: nums = [0,0,0]\n\n# Output: [[0,0,0]]\n# Explanation: The only possible triplet sums up to 0.\n\n# Constraints:\n\n# 3 <= nums.length <= 3000\n# -10^5 <= nums[i] <= 10^5\n\n\n# Topics\n\n  \n\n# Recommended Time & Space Complexity\n# You should aim for a solution with O(n^2) time and O(1) auxiliary space, plus the space used by the sorting algorithm, where n is the size of the input array. This excludes the space used for the output list.\n\n# In Python (CPython), nums.sort() modifies the list in place but can use O(n) auxiliary space in the worst case.\n\n\n# Hint 1\n# A brute force solution would be to check for every triplet in the array. This would be an O(n^3) solution. Can you think of a better way?\n\n\n# Hint 2\n# Can you think of an algorithm after sorting the input array? What can we observe by rearranging the given equation in the problem?\n\n\n# Hint 3\n# We can iterate through nums with index i and get nums[i] = -(nums[j] + nums[k]) after rearranging the equation, making -nums[i] = nums[j] + nums[k]. For each index i, we should efficiently calculate the j and k pairs without duplicates. Which algorithm is suitable to find j and k pairs?\n\n\n# Hint 4\n# To efficiently find the j and k pairs, we run the two pointer approach on the elements to the right of index i as the array is sorted. When we run two pointer algorithm, consider j and k as pointers (j is at left, k is at right) and target = -nums[i], if the current sum num[j] + nums[k] < target then we need to increase the value of current sum by incrementing j pointer. Else if the current sum num[j] + nums[k] > target then we should decrease the value of current sum by decrementing k pointer. How do you deal with duplicates?\n\n\n# Hint 5\n# When the current sum nums[j] + nums[k] == target add this pair to the result. We can move j or k pointer until j < k and the pairs are repeated. This ensures that no duplicate pairs are added to the result.\n\nfrom collections import defaultdict\n\nclass Solution:\n\n    def using_hash(self, nums):\n        freq = defaultdict(int)\n        nums.sort()\n        print(nums)\n        nl = len(nums)\n        res = []\n\n        # freq dict\n        for num in nums:\n            freq[num] += 1\n\n        # i, j loop\n        for i, ni in enumerate(nums):\n            if ni > 0:\n                break\n\n            if i > 0  and ni == nums[i-1]:\n                continue\n\n            print('i -', i)\n            f = freq.copy()\n            for j in range(i+1, nl-1):\n                nj = nums[j]\n                f[nj] -= 1\n                if j > i+1 and nj == nums[j-1]:\n                    # print('skipping - ', nums[j], 'at index -', j, ' since nums[j-1] is - ', nums[j-1])\n                    continue\n                # print('j:', j)\n                # print('nums[j-1]:', nums[j-1], 'nj:', nj)\n                # print('==================')\n\n                tar = 0 - ni - nj\n\n                # find k in freq, then decrement k freq from freq dict\n                if tar >= nj and tar in f and f[tar] > 0:\n                    res.append((ni, nj, tar))\n                    f[tar] -= 1\n\n            # reset freq on j loop end\n\n\n        return res\n\n\n    def using_two_sum(self, nums):\n        #[-1,0,1,2,-1,-4]\n        nl = len(nums)\n        nums.sort() # [-4, -1, -1, 0, 1, 2]\n        print(nums)\n        res = []\n        \n        for (k, n) in enumerate(nums):\n            # 0 -> -4\n            if k > 0 and n == nums[k-1]:\n                continue\n            \n            target = 0 - n # 4\n            i = k+1\n            j = nl-1 # 5\n\n            while i < j:\n                # i = 1\n                if nums[i] + nums[j] == target:\n                    # found a triplet\n                    # print('Nums -', nums[k], nums[i], nums[j])\n\n                    # print('nums[i] <= nums[j] <= nums[k]', nums[i] <= nums[j] <= nums[k])\n                    # print('nums[j] <= nums[k] <= nums[i]', nums[j] <= nums[k] <= nums[i])\n                    # print('nums[k] <= nums[i] <= nums[j]', nums[k] <= nums[i] <= nums[j])\n                    # print('nums[i] <= nums[k] <= nums[j]', nums[i] <= nums[k] <= nums[j])\n                    # print('nums[k] <= nums[j] <= nums[i]', nums[k] <= nums[j] <= nums[i])\n                    # print('nums[j] <= nums[i] <= nums[k]', nums[j] <= nums[i] <= nums[k])\n\n                    res.append([nums[k], nums[i], nums[j]])\n\n                    while nums[i] == nums[i+1] and i+1 < j:\n                        i += 1\n                    while nums[j] == nums[j-1] and i+1 < j:\n                        j -= 1\n\n                    i += 1\n                    j -= 1\n                    print('=========================')\n\n                elif nums[i] + nums[j] > target:\n                    j -= 1\n                else:\n                    i += 1\n                \n                print('=========================')\n                \n        return res\n\n\n    def threeSum(self, nums):\n        # return self.using_two_sum(nums)\n        return self.using_hash(nums)\n        \n\n        \n\n\nsol = Solution()\n\n# nums = [-1,0,1,2,-1,-4] # Output: [[-1,-1,2],[-1,0,1]]\n\n# nums = [0,1,1] # Output: []\n# nums = [-2, 0, 0, 2, 2]\n# nums = [0,0,0] # [[0,0,0]]\nnums = [-1,0,1,0] # [-1,0,1]\nprint(sol.threeSum(nums))", "../arrays/most_water.py": "# Container With Most Water\n# Medium\n# Topics\n# Company Tags\n# Hints\n# You are given an integer array heights where heights[i] represents the height of the \n# i\n# t\n# h\n# i \n# th\n#   bar.\n\n# You may choose any two bars to form a container. Return the maximum amount of water a container can store.\n\n\n# Example 1:\n\n\n\n# Input: height = [1,7,2,5,4,7,3,6]\n\n# Output: 36\n# Explanation: The bars at indices 1 and 7 have heights 7 and 6. The container has width 7 - 1 = 6 and height min(7, 6) = 6, so it can store 6 * 6 = 36 units of water. This is the maximum possible area.\n\n\n# Example 2:\n\n# Input: height = [2,2,2]\n\n# Output: 4\n\n# Constraints:\n\n# 2 <= height.length <= 100,000\n# 0 <= height[i] <= 10,000\n\n\n# Topics\n\n  \n\n# Recommended Time & Space Complexity\n# You should aim for a solution with O(n) time and O(1) space, where n is the size of the input array.\n\n\n# Hint 1\n# A brute force solution would be to try all pairs of bars in the array, compute the water for each pair, and return the maximum water among all pairs. This would be an O(n^2) solution. Can you think of a better way?\n\n\n# Hint 2\n# Can you think of an algorithm that runs in linear time and is commonly used in problems that deal with pairs of numbers? Find a formula to calculate the amount of water when we fix two heights.\n\n\n# Hint 3\n# We can use the two pointer algorithm. One pointer is at the start and the other at the end. At each step, we calculate the amount of water using the formula (j - i) * min(heights[i], heights[j]). Then, we move the pointer that has the smaller height value. Can you think why we only move the pointer at smaller height?\n\n\n# Hint 4\n# If heights[i] is smaller, then any future container using index i will have a smaller width, and its height is still at most heights[i]. So it cannot produce a larger area than the current pair. Therefore, we can safely discard the smaller height and move that pointer inward. The same logic applies when heights[j] is smaller.\n\nclass Solution:\n    def max_area(self, heights):\n        nl = len(heights)\n        i = 0\n        j = nl-1\n        max_area = 0\n\n        while i<j:\n            av_ht = min(heights[i], heights[j])\n            av_wd = j - i\n            area = av_wd * av_ht\n            max_area = max(area, max_area)\n\n            if heights[j] <= heights[i]:\n                j -= 1\n            else:\n                i += 1\n        \n        return max_area\n\n\n\n\nsol = Solution()\n\nhts = [1,7,2,5,4,7,3,6] # Output: 36\n\nprint(sol.max_area(hts))", "../arrays/trapping_rain_water.py": "# Trapping Rain Water\n# Hard\n# Topics\n# Company Tags\n# Hints\n# You are given an array of non-negative integers height which represent an elevation map. Each value height[i] represents the height of a bar, which has a width of 1.\n\n# Return the total amount of water that can be trapped between the bars.\n\n\n# Example 1:\n\n\n\n# Input: height = [0,2,0,3,1,0,1,3,2,1]\n\n# Output: 9\n# Constraints:\n\n# 1 <= height.length <= 20,000\n# 0 <= height[i] <= 100,000\n\n\n# Topics\n\n    \n\n# Recommended Time & Space Complexity\n# You should aim for a solution as good or better than O(n) time and O(n) space, where n is the size of the input array.\n\n\n# Hint 1\n# How can we determine the amount of water that can be trapped at a specific position in the array? Perhaps looking at the image might help clarify.\n\n\n# Hint 2\n# From the image, we can see that to calculate the amount of water trapped at a position, the greater element to the left l and the greater element to the right r of the current position are crucial. The formula for the trapped water at index i is given by: min(height[l], height[r]) - height[i].\n\n\n# Hint 3\n# A brute force solution would involve iterating through the array with index i, finding the greater elements to the left (l) and right (r) for each index, and then calculating the trapped water for that position. The total amount of trapped water would be the sum of the water trapped at each index. Finding l and r for each index involves repeated work, resulting in an O(n^2) solution. Can you think of a more efficient approach? Maybe there is something that we can precompute and store in arrays.\n\n\n# Hint 4\n# We can store the prefix maximum in an array by iterating from left to right and the suffix maximum in another array by iterating from right to left. For example, in [1, 5, 2, 3, 4], for the element 3, the prefix maximum is 5, and the suffix maximum is 4. Once these arrays are built, we can iterate through the array with index i and calculate the total water trapped at each position using the formula: min(prefix[i], suffix[i]) - height[i].\n\nclass Solution:\n    def using_pref_suf(self, height):\n        # lets write a stupid solution\n        hl = len(height)\n        max_ht = height[0]\n        pref_area = [0] * hl\n        suf_area = [0] * hl\n        area = 0\n\n        # [ 0, 2, 0, 3, 1, 0, 1, 3, 2, 1 ] \n\n        for i in range(hl):\n            if height[i] == max_ht:\n                pref_area[i] = 0\n            elif height[i] > max_ht:\n                pref_area[i] = 0\n                max_ht = height[i]\n            else:\n                pref_area[i] = max_ht - height[i]\n\n        max_ht = height[hl-1]\n\n        for i in range(hl-1, -1, -1):\n            if height[i] == max_ht:\n                suf_area[i] = 0\n            elif height[i] > max_ht:\n                suf_area[i] = 0\n                max_ht = height[i]\n            else:\n                suf_area[i] = max_ht - height[i]\n\n        for i in range(hl):\n            area += min(pref_area[i], suf_area[i])\n        \n        return area\n\n    \n    def using_two_pointers(self, height):\n        hl = len(height)\n        i = 0\n        j = hl-1\n        left_max = height[i]\n        right_max = height[j]\n        area = 0\n\n        while i<j:\n            if height[i] >= left_max:\n                left_max = height[i]\n\n            if height[j] >= right_max:\n                right_max = height[j]\n\n            if left_max <= right_max:\n                area += left_max - height[i]\n                i += 1\n            else:\n                area += right_max - height[j]\n                j -= 1\n\n        return area\n\n\n    def trap(self, height) -> int:\n        # return self.using_pref_suf(height)\n        return self.using_two_pointers(height)\n        \n            \n\n\n\n\n\nsol = Solution()\n\nhts = [0,2,0,3,1,0,1,3,2,1] # Output: 9\n\nprint(sol.trap(hts))", "../arrays/buy_sell_stock.py": "# Best Time to Buy and Sell Stock\n# Easy\n# Topics\n# Company Tags\n# Hints\n# You are given an integer array prices where prices[i] is the price of NeetCoin on the ith day.\n\n# You may choose a single day to buy one NeetCoin and choose a different day in the future to sell it.\n\n# Return the maximum profit you can achieve. You may choose to not make any transactions, in which case the profit would be 0.\n\n# Example 1:\n\n# Input: prices = [10,1,5,6,7,1]\n\n# Output: 6\n# Explanation: Buy prices[1] and sell prices[4], profit = 7 - 1 = 6.\n\n# Example 2:\n\n# Input: prices = [10,8,7,5,2]\n\n# Output: 0\n# Explanation: No profitable transactions can be made, thus the max profit is 0.\n\n# Constraints:\n\n# 1 <= prices.length <= 100\n# 0 <= prices[i] <= 100\n\n\n# Topics\n\n \n\n# Recommended Time & Space Complexity\n# You should aim for a solution with O(n) time and O(1) space, where n is the size of the input array.\n\n\n# Hint 1\n# A brute force solution would be to iterate through the array with index i, considering it as the day to buy, and trying all possible options for selling it on the days to the right of index i. This would be an O(n^2) solution. Can you think of a better way?\n\n\n# Hint 2\n# You should buy at a price and always sell at a higher price. Can you iterate through the array with index i, considering it as either the buying price or the selling price?\n\n\n# Hint 3\n# We can iterate through the array with index i, considering it as the selling value. But what value will it be optimal to consider as buying point on the left of index i?\n\n\n# Hint 4\n# We are trying to maximize profit = sell - buy. If the current i is the sell value, we want to choose the minimum buy value to the left of i to maximize the profit. The result will be the maximum profit among all. However, if all profits are negative, we can return 0 since we are allowed to skip doing transaction.\n\n\nclass Solution:\n    def max_profit(self, prices):\n        mbp = prices[0] # min buy price\n        max_profit = 0\n\n        # [ 10, 1, 5, 6, 7, 1]\n        for p in prices:\n            max_profit = max(p - mbp, max_profit)\n            mbp = min(p, mbp)\n        \n        return max_profit\n\n\n\n\nsol = Solution()\np = [10,1,5,6,7,1] # Output: 6\n\n# p = [10,8,7,5,2] # Output: 0\n\nprint(sol.max_profit(p))", "../sliding_window/longest_substring.py": "# Longest Substring Without Repeating Characters\n# Medium\n# Topics\n# Company Tags\n# Hints\n# Given a string s, find the length of the longest substring without duplicate characters.\n\n# A substring is a contiguous sequence of characters within a string.\n\n\n# Example 1:\n\n# Input: s = \"zxyzxyz\"\n\n# Output: 3\n# Explanation: The string \"xyz\" is the longest without duplicate characters.\n\n\n# Example 2:\n\n# Input: s = \"xxxx\"\n\n# Output: 1\n\n# Constraints:\n\n# 0 <= s.length <= 50,000\n# s may consist of printable ASCII characters.\n\n\n# Topics\n\n  \n\n# Recommended Time & Space Complexity\n# You should aim for a solution with O(n) time and O(m) space, where n is the length of the string and m is the number of unique characters in the string.\n\n\n# Hint 1\n# A brute force solution would be to try the substring starting at index i and try to find the maximum length we can form without duplicates by starting at that index. We can use a hash set to detect duplicates in O(1) time. Can you think of a better way?\n\n\n# Hint 2\n# We can use the sliding window algorithm. Since we only care about substrings without duplicate characters, the sliding window can help us maintain valid substring with its dynamic nature.\n\n\n# Hint 3\n# We can iterate through the given string with index r as the right boundary and l as the left boundary of the window. We use a hash set to check if the character is present in the window or not. When we encounter a character at index r that is already present in the window, we shrink the window by incrementing the l pointer until the window no longer contains any duplicates. Also, we remove characters from the hash set that are excluded from the window as the l pointer moves. At each iteration, we update the result with the length of the current window, r - l + 1, if this length is greater than the current result.\n\n\nclass Solution:\n    def length_of_longest_substring(self, s: str) -> int:\n        sd = {}\n        i = 0\n        j = 0\n        sl = len(s)\n        max_len = 0\n\n        while j < sl:\n            if s[j] in sd and sd[s[j]] >= i:\n                # reset found index in sd dictionary\n                # reset i to new index of found index + 1 since that is start of new window\n                last_found_ind = sd[s[j]] # abccbde - lfi 2, i 0, pop 1. pop - 1:i, so 1, 0\n                sd[s[j]] = j\n                i = last_found_ind + 1\n                j += 1\n                continue\n\n            sd[s[j]] = j\n            j += 1\n            max_len = max(max_len, j-i)\n        \n        return max_len\n\n\nsol = Solution()\n\ns = \"zxyzxyz\" # Output: 3\n# Explanation: The string \"xyz\" is the longest without duplicate characters.\n\n# s = \"xxxx\" # Output: 1\n# s = \"aab\" # Output: 2\n# s = \"aabc\" # Output: 3\n# s = \"aabcabcd\" # Output: 4\n# s = \"aabcdebax\" # i started at 1, b last found at 2, b now found at 6 so j must also be at 6. curr len is 5, reset len to (len - found index - start index)\n# s = \"accde\" # \ns = \"\"\"N3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S\n<\nY{\n>\nM9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S\n<\nY{\n>\nM9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S\n<\nY{\n>\nM9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S\n<\nY{\n>\nM9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S\n<\nY{\n>\nM9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S\n<\nY{\n>\nM9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P\n\"\"\"\n\nprint(sol.length_of_longest_substring(s))"}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="constants.js"></script>
+<script>
+  // Starting state, matching the NeetCode list when this page was made
+  const DEFAULT_DONE = PROBLEMS.slice(0, 16).map(p => p[0]);
+  const DEFAULT_STARRED = [
+    "Product of Array Except Self",
+    "Longest Consecutive Sequence",
+    "Trapping Rain Water",
+    "Longest Substring Without Repeating Characters",
+  ];
+
+  const KEY = "vins-dsa-tracker-v1";
+  const RANK = { Easy: 0, Medium: 1, Hard: 2 };
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY));
+      if (saved && Array.isArray(saved.done) && Array.isArray(saved.starred)) {
+        return { done: new Set(saved.done), starred: new Set(saved.starred) };
+      }
+    } catch (e) {}
+    return { done: new Set(DEFAULT_DONE), starred: new Set(DEFAULT_STARRED) };
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ done: [...state.done], starred: [...state.starred] }));
+    } catch (e) {}
+  }
+
+  let state = load();
+  let sortDir = 0; // 0 = list order, 1 = easy first, -1 = hard first
+
+  const ICON_STATUS = '<svg class="status-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.5"/><path d="M6 10.2l2.7 2.6L14 7.6"/></svg>';
+  const ICON_STAR = '<svg class="star-icon" viewBox="0 0 20 20"><path d="M10 2.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L10 14.6l-4.8 2.5.9-5.4L2.2 7.9l5.4-.8z"/></svg>';
+  const ICON_EXT = '<svg viewBox="0 0 14 14"><path d="M8 2h4v4M12 2L6.5 7.5M10.5 8.5V11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1h2.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_DOC = '<svg viewBox="0 0 16 16"><path d="M4 1.5h5.5L13 5v9a.5.5 0 0 1-.5.5h-8.5A.5.5 0 0 1 3.5 14V2a.5.5 0 0 1 .5-.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.5 1.5V5H13M5.8 8.2h4.4M5.8 10.7h4.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+
+  function linkOrIcon(file, cls, icon, title) {
+    return file
+      ? `<a class="${cls}" href="?file=${encodeURIComponent(file)}" target="_blank" rel="noopener" title="${title}">${icon}</a>`
+      : `<span class="${cls}" title="No solution file yet">${icon}</span>`;
+  }
+
+  function render() {
+    const list = PROBLEMS.map((p, i) => ({ name: p[0], diff: p[1], file: p[2], i }));
+    if (sortDir) list.sort((a, b) => sortDir * (RANK[a.diff] - RANK[b.diff]) || a.i - b.i);
+
+    document.getElementById("rows").innerHTML = list.map(p => `
+      <tr data-name="${p.name}" class="${state.done.has(p.name) ? "done" : ""} ${state.starred.has(p.name) ? "starred" : ""}">
+        <td class="c-status"><button class="toggle" data-act="done" aria-label="Mark ${p.name} solved">${ICON_STATUS}</button></td>
+        <td class="c-star"><button class="toggle" data-act="star" aria-label="Star ${p.name}">${ICON_STAR}</button></td>
+        <td><span class="name">${p.name}</span>${linkOrIcon(p.file, "ext", ICON_EXT, "Open " + p.file)}</td>
+        <td class="c-diff"><span class="pill ${p.diff}">${p.diff}</span></td>
+        <td class="c-sol">${linkOrIcon(p.file, "sol", ICON_DOC, "Open " + p.file)}</td>
+      </tr>`).join("");
+    renderStats();
+  }
+
+  function renderStats() {
+    const totals = { Easy: 0, Medium: 0, Hard: 0 };
+    const solved = { Easy: 0, Medium: 0, Hard: 0 };
+    for (const [name, diff] of PROBLEMS) {
+      totals[diff]++;
+      if (state.done.has(name)) solved[diff]++;
+    }
+    const all = PROBLEMS.length;
+    const done = solved.Easy + solved.Medium + solved.Hard;
+    document.getElementById("solved").textContent = done;
+    document.getElementById("total").textContent = all;
+    document.getElementById("bar-total").style.width = (100 * done / all) + "%";
+    for (const d of ["Easy", "Medium", "Hard"]) {
+      const k = d.toLowerCase();
+      document.getElementById(k).innerHTML = `${solved[d]} <small>/ ${totals[d]}</small>`;
+      document.getElementById("bar-" + k).style.width = (100 * solved[d] / totals[d]) + "%";
+    }
+  }
+
+  document.getElementById("rows").addEventListener("click", e => {
+    const btn = e.target.closest("button.toggle");
+    if (!btn) return;
+    const row = btn.closest("tr");
+    const name = row.dataset.name;
+    const set = btn.dataset.act === "done" ? state.done : state.starred;
+    set.has(name) ? set.delete(name) : set.add(name);
+    row.classList.toggle(btn.dataset.act === "done" ? "done" : "starred", set.has(name));
+    save();
+    renderStats();
+  });
+
+  document.getElementById("sort-diff").addEventListener("click", () => {
+    sortDir = sortDir === 0 ? 1 : sortDir === 1 ? -1 : 0;
+    render();
+  });
+
+  document.getElementById("reset").addEventListener("click", () => {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    state = load();
+    render();
+  });
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function renderViewer(file) {
+    let sources = {};
+    try { sources = JSON.parse(document.getElementById("sources").textContent); } catch (e) {}
+    const problem = PROBLEMS.find(p => p[2] === file);
+    const code = sources[file];
+
+    document.body.classList.add("viewing");
+    document.title = (problem ? problem[0] : file) + " · Vin's DSA Tracker";
+    document.getElementById("viewer-title").textContent = problem ? problem[0] : file;
+    document.getElementById("code-name").textContent = file.replace(/^(\.\.\/)+/, "");
+
+    const pre = document.getElementById("code");
+    if (code === undefined) {
+      pre.innerHTML = `<div class="missing">This file isn't embedded yet. Run <code>python tracker/sync_tracker.py</code> and reload.</div>`;
+      document.getElementById("copy").hidden = true;
+      return;
+    }
+
+    // Highlight small files only; very large ones (big test inputs) would stall the page
+    let html = escapeHtml(code);
+    if (window.hljs && code.length < 100000) {
+      html = hljs.highlight(code, { language: "python" }).value;
+    }
+    // Split into lines for numbering; reopen any span that crosses a line break
+    let open = [];
+    pre.innerHTML = html.split("\n").map(line => {
+      const out = open.join("") + line;
+      for (const tag of line.match(/<span[^>]*>|<\/span>/g) || []) {
+        tag === "</span>" ? open.pop() : open.push(tag);
+      }
+      return `<span class="ln">${out}${"</span>".repeat(open.length)}</span>`;
+    }).join("");
+
+    const btn = document.getElementById("copy");
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(code);
+        btn.textContent = "Copied";
+        setTimeout(() => (btn.textContent = "Copy"), 1500);
+      } catch (e) {}
+    });
+  }
+
+  const viewFile = new URLSearchParams(location.search).get("file");
+  if (viewFile) renderViewer(viewFile);
+  else render();
+</script>
+</body>
+</html>
