@@ -51,21 +51,36 @@
 class Solution:
     def length_of_longest_substring(self, s: str) -> int:
         str_set = set()
+        sd = {}
         i = 0
         j = 0
         sl = len(s)
         max_len = 0
+        length = 0
 
         while j < sl:
-            if s[j] not in str_set:
-                str_set.add(s[j])
+            if s[j] not in sd:
+                # str_set.add(s[j])
+                sd[s[j]] = j
                 j += 1
-                max_len = max(j-i, max_len)
+                length = j-i
+                max_len = max(max_len, length)
                 continue
             
-            str_set.remove(s[i])
-            i += 1
-            j = i
+            # str_set.remove(s[i])
+            # reset found index
+            # reset i to new index
+            # reset length
+            last_found_ind = sd[s[j]] # abccbde - lfi 2, i 0, pop 1. pop - 1:i, so 1, 0
+
+            pop_ind = last_found_ind - 1
+            while pop_ind >= i:
+                sd.pop(s[pop_ind])
+                pop_ind -= 1
+            
+            sd[s[j]] = j
+            i = last_found_ind + 1
+            j += 1
         
         return max_len
 
@@ -79,6 +94,8 @@ s = "zxyzxyz" # Output: 3
 # s = "aab" # Output: 2
 # s = "aabc" # Output: 3
 # s = "aabcabcd" # Output: 4
+# s = "aabcdebax" # i started at 1, b last found at 2, b now found at 6 so j must also be at 6. curr len is 5, reset len to (len - found index - start index)
+# s = "accde" # 
 s = """N3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
 <
 Y{
