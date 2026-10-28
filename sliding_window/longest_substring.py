@@ -55,13 +55,11 @@ class Solution:
         j = 0
         sl = len(s)
         max_len = 0
-        length = 0
 
         while j < sl:
             if s[j] in sd and sd[s[j]] >= i:
-                # reset found index
-                # reset i to new index
-                # reset length
+                # reset found index in sd dictionary
+                # reset i to new index of found index + 1 since that is start of new window
                 last_found_ind = sd[s[j]] # abccbde - lfi 2, i 0, pop 1. pop - 1:i, so 1, 0
                 sd[s[j]] = j
                 i = last_found_ind + 1
