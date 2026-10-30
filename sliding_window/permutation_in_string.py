@@ -91,8 +91,7 @@ class Solution:
 
         return False
 
-    def check_inclusion(self, s1: str, s2: str):
-        # return self.correct_O_of_N_sol(s1, s2)
+    def o_of_mn_sol(self, s1, s2):
         sl1 = len(s1)
         sl2 = len(s2)
         cd = defaultdict(int)
@@ -130,6 +129,11 @@ class Solution:
             print('===================')
 
         return False
+
+    def check_inclusion(self, s1: str, s2: str):
+        # return self.o_of_mn_sol(s1, s2)
+        return self.correct_O_of_N_sol(s1, s2)
+        
 
 
 
