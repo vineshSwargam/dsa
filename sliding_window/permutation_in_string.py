@@ -49,7 +49,50 @@ from collections import defaultdict
 
 
 class Solution:
+    def correct_O_of_N_sol(self, s1, s2):
+        sl1 = len(s1)
+        sl2 = len(s2)
+        cd = [0]*26
+        ord_offset = 97
+        l = 0
+        r = sl1-1
+
+        if sl1 > sl2:
+            return False
+
+        for st in s1:
+            cd[ord(st)-ord_offset] += 1
+
+        for i in range(r-l+1):
+            s2_ind = ord(s2[l+i])-ord_offset
+            cd[s2_ind] -= 1
+
+        while r<sl2:
+            print(s1, sl1)
+            print(s2, sl2)
+            print(l, r)
+            print(cd)
+
+            if l > 0:
+                s2l_ind = ord(s2[l-1])-ord_offset
+                cd[s2l_ind] += 1
+
+                s2r_ind = ord(s2[r])-ord_offset
+                cd[s2r_ind] -= 1
+            
+            print(cd)
+            if cd == [0]*26:
+                return True
+
+            l += 1
+            r += 1
+
+            print('===================')
+
+        return False
+
     def check_inclusion(self, s1: str, s2: str):
+        # return self.correct_O_of_N_sol(s1, s2)
         sl1 = len(s1)
         sl2 = len(s2)
         cd = defaultdict(int)
