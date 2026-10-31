@@ -49,6 +49,53 @@ from collections import defaultdict
 
 
 class Solution:
+    def brute_force(self, s1, s2):
+        ss1 = sorted(s1)
+        s1l = len(s1)
+        s2l = len(s2)
+
+        for i in range(s1l):
+            for j in range(i, s2l):
+                substr = s2[i:j+1]
+                sorted_substr = sorted(substr)
+                if sorted_substr == ss1:
+                    return True
+                
+        return False
+    
+    
+    def hash_table(self, s1, s2):
+        s1l = len(s1)
+        s2l = len(s2)
+        count1 = defaultdict(int)
+        need = 0
+
+        for st in s1:
+            if count1[st] not in count1:
+                need += 1
+            count1[st] += 1
+
+        for i in range(s2l):
+            matched_char_count = 0
+            count2 = defaultdict(int)
+            for j in range(i, s2l):
+                count2[s2[j]] += 1
+
+                if count2[s2[j]] > count1[s2[j]]:
+                    break
+
+                if count2[s2[j]] == count1[s2[j]]:
+                    char_matched += 1
+                
+                if need == matched_char_count:
+                    return True
+
+        return False
+                
+
+
+
+
     def correct_O_of_N_sol(self, s1, s2):
         sl1 = len(s1)
         sl2 = len(s2)
