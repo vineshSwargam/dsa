@@ -41,7 +41,34 @@
 # As the array has postfix expression, stack helps us to maintain the correct order of operations by ensuring that we always use the most recent operands (those closest to the operator) when performing the operation. After the iteration, the final result is left in the stack.
 
 class Solution:
-    def eval_rpn(self, tokens) -> int:
+    def using_recursion(self, s):
+        def evaluate(n):
+            if n not in '*/-+':
+                return int(n)
+            
+            y = evaluate(s.pop())
+            x = evaluate(s.pop())
+            if n == '*':
+                print('* x, y', x, y)
+                print('* Returning -', x*y)
+                return x*y
+            if n == '/':
+                print('/ x, y', x, y)
+                print('/ Returning -', x/y)
+                return x/y
+            if n == '-':
+                print('- x, y', x, y)
+                print('- Returning -', x-y)
+                return x-y
+            if n == '+':
+                print('+ x, y', x, y)
+                print('+ Returning -', x+y)
+                return x+y
+
+
+        return evaluate(s.pop())
+
+    def using_stack(self, s):
         stack = []
         ops = {
             '*': lambda y, x: x*y,
@@ -58,10 +85,15 @@ class Solution:
             stack.append(int(res))
 
         return stack.pop()
+    
+
+    def eval_rpn(self, tokens) -> int:
+        # return self.using_stack(tokens)
+        return self.using_recursion(tokens)
         
 
 sol = Solution()
 
-tokens = ["1","2","+","3","*","4","-"] # 5
-# tokens = ['18'] # 5
+# tokens = ["1","2","+","3","*","4","-"] # 5
+tokens = ['18'] # 18
 print(sol.eval_rpn(tokens))
