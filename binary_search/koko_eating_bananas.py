@@ -55,14 +55,57 @@
 # Hint 5
 # Rather than linearly scanning, we can use binary search. The upper bound of k is max(piles) and since we are only dealing with positive values, the lower bound is 1. The search space of our binary search is 1 through max(piles). This allows us to find the smallest possible k using binary search.
 
+from math import ceil
 
 class Solution:
-    def min_eating_speed(self, piles: List[int], h: int) -> int:
-        pass
+
+    def is_valid(self, piles, h, k):
+        k_sum = 0
+        for p in piles:
+            k_sum += (p+k-1)//k
+            # print(k_sum)
+            if k_sum > h:
+                return False
+
+        return True
+
+
+    def binary_search(self, piles, h, l, r):
+        # print('piles and h -', piles, h)
+        if l > r:
+            return float('inf')
+        
+        mid = (l+r)//2
+        # print(k_sp, mid)
+
+        if self.is_valid(piles, h, mid):
+            # print(f'{k_sp[mid]} is valid!')
+            return min(mid, self.binary_search(piles, h, l, mid-1))
+
+        return self.binary_search(piles, h, mid+1, r)
+
+
+    def min_eating_speed(self, piles, h: int) -> int:
+        k_ub = 0
+        for p in piles:
+            k_ub = max(p, k_ub)
+
+        return self.binary_search(piles, h, 1, k_ub)
+        
+
 
 
 sol = Solution()
 
-# p = [], h = 0
-sol.min_eating_speed()
+# p, h = [1,4,3,2], 9                          # 2  - example 1
+p, h = [25,10,23,4], 4                     # 25 - h == len(piles), must eat the biggest pile in 1 hour
+# p, h = [3,6,7,11], 8                       # 4  - answer is in the middle of the range
+# p, h = [30,11,23,4,20], 5                  # 30 - h == len(piles) again
+# p, h = [30,11,23,4,20], 6                  # 23 - one spare hour lowers k a lot
+# p, h = [5], 1                              # 5  - single pile, one hour
+# p, h = [5], 10                             # 1  - more hours than bananas, k can't go below 1
+# p, h = [1,1,1,1], 4                        # 1  - lower bound of the search
+# p, h = [1000000000], 2                     # 500000000 - huge pile, brute force is too slow
+# p, h = [1000000000,1000000000], 1000000000 # 2  - huge h
+print(sol.min_eating_speed(p, h))
 
