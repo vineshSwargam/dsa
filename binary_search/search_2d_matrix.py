@@ -53,20 +53,7 @@
 # Once we identify the potential row where the target might exist, we can perform a binary search on that row which acts as a one dimensional array. It takes O(logn) time, where n is the number of columns in the row.
 
 class Solution:
-    def binary_search(self, matrix, target: int, l, r, row) -> int:
-        print(matrix)
-        print(target, l, r, row)
-        if row > len(matrix) - 1:
-            print('Row exceeded')
-            return False
-
-        if not matrix[row][r] >= target >= matrix[row][l]:
-            return self.binary_search(matrix, target, l, r, row+1)
-        
-        nums = matrix[row]
-
-        
-
+    def binary_search(self, nums, target: int, l, r) -> int:
         if l > r:
             return False
     
@@ -77,16 +64,35 @@ class Solution:
             return True
         
         if target < nums[mid]:
-            return self.binary_search(matrix, target, l, mid-1, row)
+            return self.binary_search(nums, target, l, mid-1)
 
         if target > nums[mid]:
-            return self.binary_search(matrix, target, mid+1, r, row)
+            return self.binary_search(nums, target, mid+1, r)
 
         return False
+        
+    def mat_binary_search(self, matrix, target: int, l, r) -> int:
+        print(matrix)
+
+        if l>r:
+            return False
+
+        print(target, l, r)
+        mid_mat = (l+r)//2
+        print('mid_mat -', mid_mat)
+
+        if target < matrix[mid_mat][0]:
+            return self.mat_binary_search(matrix, target, l, mid_mat-1)
+        elif target > matrix[mid_mat][-1]:
+            return self.mat_binary_search(matrix, target, mid_mat+1, r)
+        else:
+            return self.binary_search(matrix[mid_mat], target, 0, len(matrix[mid_mat])-1)
 
 
     def search_matrix(self, matrix, target: int) -> int:
-        return self.binary_search(matrix, target, 0, len(matrix[0])-1, 0)
+        if not matrix[-1][-1] >= target >= matrix[0][0]:
+            return False
+        return self.mat_binary_search(matrix, target, 0, len(matrix)-1)
         
         
 
@@ -94,7 +100,7 @@ sol = Solution()
 
 m = [[1,2,4,8],[10,11,12,13],[14,20,30,40]]
 
-# nums, target = m, 10                 # True  - first element of a middle row
+nums, target = m, 10                 # True  - first element of a middle row
 # nums, target = m, 15               # False - gap inside a row (between 14 and 20)
 # nums, target = m, 9                # False - gap between rows (after 8, before 10)
 # nums, target = m, 1                # True  - very first element
