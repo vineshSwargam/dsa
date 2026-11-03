@@ -56,9 +56,33 @@
 # There will be two conditions where l and mid will be in left sorted segment or mid and r will be in right sorted segement. If l and mid in sorted segement, then nums[l] < nums[mid] and the minimum element will be in the right part. If mid and r in sorted segment, then nums[mid] < nums[r] and the minimum element will be in the left part. After the binary search we end up finding the minimum element.
 
 class Solution:
-    def find_min(self, nums: List[int]) -> int:
-        pass
+    def binary_search(self, nums, l, r):
+        # print('nums -', nums, l, r)
+        mid = (l+r)//2
+        # print(l, r, mid)
+
+        if nums[l] <= nums[mid] <= nums[r]:
+            return nums[l]
+        if nums[l] > nums[mid]:
+            return self.binary_search(nums, l, mid)
+
+        return self.binary_search(nums, mid+1, r)
+
+
+    def find_min(self, nums) -> int:
+        return self.binary_search(nums, 0, len(nums)-1)
+        
     
 sol = Solution()
 
-print(sol.find_min())
+# nums = [3,4,5,6,1,2]            # 1  - example 1
+# nums = [4,5,0,1,2,3]          # 0  - example 2, min left of middle
+nums = [4,5,6,7]              # 4  - not rotated (rotated n times)
+# nums = [2,3,4,5,6,1]          # 1  - min is the last element
+# nums = [6,1,2,3,4,5]          # 1  - min is the second element
+# nums = [5]                    # 5  - single element
+# nums = [2,1]                  # 1  - two elements, rotated
+# nums = [1,2]                  # 1  - two elements, not rotated
+# nums = [3,1,2]                # 1  - min exactly in the middle
+# nums = [-5,-3,-1,-10,-8]      # -10 - negatives
+print(sol.find_min(nums))
