@@ -55,8 +55,6 @@
 # Hint 4
 # Because the array is sorted, all elements to the left of mid (including 3) are guaranteed to be smaller than the target. Therefore, we can safely eliminate that half of the array from consideration, narrowing the search to the right half and repeat this search until we find the target.
 
-from math import floor
-
 
 class Solution:
     def binary_search(self, nums, target: int, l, r) -> int:
