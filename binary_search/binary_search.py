@@ -55,13 +55,43 @@
 # Hint 4
 # Because the array is sorted, all elements to the left of mid (including 3) are guaranteed to be smaller than the target. Therefore, we can safely eliminate that half of the array from consideration, narrowing the search to the right half and repeat this search until we find the target.
 
+from math import floor
+
+
 class Solution:
-    def search(self, nums: List[int], target: int) -> int:
+    def binary_search(self, nums, target: int, l, r) -> int:
+        if l > r:
+            return -1
+    
+        mid = (l+r)//2
+        print(nums, target, mid)
+        
+        if target == nums[mid]:
+            return mid
+        
+        if target < nums[mid]:
+            return self.binary_search(nums, target, l, mid-1)
+
+        if target > nums[mid]:
+            return self.binary_search(nums, target, mid+1, r)
+
+        return -1
+
+
+    def search(self, nums, target: int) -> int:
+        return self.binary_search(nums, target, 0, len(nums)-1)
+        
         
 
 sol = Solution()
 
-nums = [-1,0,2,4,6,8], target = 4 # Output: 3
-nums = [-1,0,2,4,6,8], target = 3 # Output: -1
+nums, target = [-1,0,2,4,6,8], 4 # Output: 3
+# nums, target = [-1,0,2,4,6,8], 3 # Output: -1 
+nums, target = [-1,0,2,4,6,8], 5 # Output: -1 
+# nums, target = [-1,0,2,4,6,8], 6 # Output: 4
+# nums, target = [-1,0,2,4,6,8], 8 # Output: 5
+nums, target = [2, 4], -20 # Output: -1
+nums, target = [-2, -1, 7, 10], 2 # -1
+# nums, target = [2, 4], 5  # Output: -1
 
-sol.seach()
+print(sol.search(nums, target))
