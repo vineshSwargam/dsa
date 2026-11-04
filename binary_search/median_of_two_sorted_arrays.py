@@ -99,9 +99,11 @@ class Solution:
                 return (max_left + min_right)/2
             return min_right
 
-        def binary_search(l, r):
+        l = 0
+        r = sml_len
+        
+        while l<=r:
             i = (l+r)//2 # 5
-
             j = half - i # 5-2 = 3
             sm_lh_end = sml[i-1] if i > 0 else float('-inf')
             sm_rh_start = sml[i] if i < sml_len else float('inf')
@@ -109,14 +111,13 @@ class Solution:
             lg_rh_start = lgl[j] if j < lgl_len else float('inf')
             
             if sm_lh_end > lg_rh_start:
-                return binary_search(l, i-1)
+                r = i-1
+                continue
             if sm_rh_start < lg_lh_end:
-                return binary_search(i+1, r)
+                l = i+1
+                continue
 
             return get_median(sm_lh_end, sm_rh_start, lg_lh_end, lg_rh_start)
-        
-        return binary_search(0, sml_len) # 2
-        
         
 
 
