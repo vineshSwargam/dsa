@@ -56,42 +56,21 @@ class ListNode:
 
 class Solution:
     def merge_two_lists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+        cur_n3 = n3 = ListNode()
 
-        if list1 == None and list2 == None:
-            return None
-        elif list1 == None and list2 != None:
-            return list2
-        elif list1 != None and list2 == None:
-            return list1
-        
-        if list1.val < list2.val:
-            n3 = ListNode(list1.val)
-            list1 = list1.next
-        else:
-            n3 = ListNode(list2.val)
-            list2 = list2.next
-        
-        cur_n3 = n3
-
-        while (list1 or list2):
-            if list1 != None and list2 == None:
-                new_node = ListNode(list1.val, None)
-                list1 = list1.next
-            elif list2 != None and list1 == None:
-                new_node = ListNode(list2.val, None)
-                list2 = list2.next
-            elif list1.val < list2.val:
-                new_node = ListNode(list1.val, None)
+        while list1 and list2:
+            if list1.val < list2.val:
+                cur_n3.next = list1
                 list1 = list1.next
             else:
-                new_node = ListNode(list2.val, None)
+                cur_n3.next = list2
                 list2 = list2.next
     
-            cur_n3.next = new_node
-            cur_n3 = new_node
-            # print_list(n3)
+            cur_n3 = cur_n3.next
+        
+        cur_n3 = list1 or list2
 
-        return n3
+        return n3.next
 
     
 sol = Solution()
