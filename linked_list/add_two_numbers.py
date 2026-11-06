@@ -64,20 +64,76 @@
 # 60.3%
 
 
+from typing import Optional
+from utils.linked_list import ListNode, build_list, to_list, print_list
+
 # Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
 
 class Solution:
     def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        carry = 0
+        lsum = ''
+
+        while l1 or l2:
+            l1_val = l1.val if l1 else 0
+            l2_val = l2.val if l2 else 0
+            print(l1_val, l2_val)
+            ls = l1_val + l2_val + carry
+            lower_dig = str(ls%10)
+            carry = ls//10
+            lsum += lower_dig
+            l1 = l1.next if l1 else None
+            l2 = l2.next if l2 else None
+
+        if carry:
+            lsum += str(carry)
+
+        print(f'lsum - {lsum}')
+
+        prev = None
+        for d in lsum:
+            node = ListNode(int(d))
+            if prev:
+                prev.next = node
+            else:
+                head = node
+            prev = node
+
+        print_list(head)
+        return head
+
+
+    #     153  351
+    #     456  654
+    #    5001 1005 
+        
+
 
 
 sol = Solution()
-l1, l2 = [1,2,3], [4,5,6] # Output [5,7,9]
-# l1, l2 = [9], [9] # Output [8,1]
 
+# (l1, l2, expected) - digits are in reverse order
+tests = [
+    # ([1,2,3], [4,5,6], [5,7,9]),                       # example 1: 321 + 654 = 975
+    # ([9], [9], [8,1]),                                 # example 2: 9 + 9 = 18
+    # ([0], [0], [0]),                                   # both zero
+    # ([0], [1,2], [1,2]),                               # one number is zero: 0 + 21 = 21
+    ([5], [5], [0,1]),                                 # carry creates a new digit: 5 + 5 = 10
+    ([1,2,3], [4], [5,2,3]),                           # l1 longer: 321 + 4 = 325
+    ([4], [1,2,3], [5,2,3]),                           # l2 longer: 4 + 321 = 325
+    ([5,6], [5,6], [0,3,1]),                           # carry in the middle: 65 + 65 = 130
+    ([9,9,9], [1], [0,0,0,1]),                         # carry runs through l1: 999 + 1 = 1000
+    ([1], [9,9,9], [0,0,0,1]),                         # carry runs through l2: 1 + 999 = 1000
+    ([9,9], [9,9], [8,9,1]),                           # carry at every digit: 99 + 99 = 198
+    ([9]*100, [1], [0]*100 + [1]),                     # max length, carry runs through all of it
+    ([9]*100, [9]*100, [8] + [9]*99 + [1]),            # both max length, result is 101 digits
+]
 
-
-print(sol.addTwoNumbers(l1, l2))
+for a, b, expected in tests:
+    got = to_list(sol.addTwoNumbers(build_list(a), build_list(b)))
+    status = "PASS" if got == expected else "FAIL"
+    print(f"{status}  l1={a} l2={b} -> {got}  expected {expected}")
