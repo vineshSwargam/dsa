@@ -149,6 +149,23 @@ def snake(title: str) -> str:
     return kebab(title).replace("-", "_")
 
 
+def camel_to_snake(name: str) -> str:
+    """addTwoNumbers -> add_two_numbers, getMin -> get_min, parseURLPath -> parse_url_path."""
+    name = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", name)
+    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+    return name.lower()
+
+
+def snake_case_methods(code: str) -> str:
+    """Rename every non-dunder `def camelCase(` in the starter code to snake_case."""
+    def repl(m):
+        name = m.group(2)
+        if name.startswith("__"):
+            return m.group(0)
+        return f"{m.group(1)}{camel_to_snake(name)}{m.group(3)}"
+    return re.sub(r"^(\s*def\s+)(\w+)(\s*\()", repl, code, flags=re.MULTILINE)
+
+
 def comment_block(text: str) -> str:
     out = []
     for line in text.splitlines():
@@ -215,6 +232,7 @@ def parse_examples(left: str) -> list:
 
 def build_file(title: str, left: str, code: str) -> str:
     gap = "\n\n\n"
+    code = snake_case_methods(code)
     sections = [comment_block(left), code.rstrip()]
 
     class_name, method_name = find_class_and_method(code)

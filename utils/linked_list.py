@@ -4,6 +4,19 @@ class ListNode:
         self.next = next
 
 
+def print_list(head) -> None:
+    seen = set()
+    vals = []
+    node = head
+    while node and node not in seen:
+        seen.add(node)
+        vals.append(str(node.val))
+        node = node.next
+
+    # node is only non-None here if the list loops back on itself
+    vals.append(f'CYCLE back to {node.val}' if node else 'None')
+    print(' -> '.join(vals))
+    
 def build_list(vals):
     """[1, 2, 3] -> 1 -> 2 -> 3 -> None. Returns the head (None for an empty list)."""
     dummy = ListNode()
