@@ -76,34 +76,34 @@ class ListNode:
 class Solution:
     def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
         carry = 0
-        lsum = ''
+        prev = None
+        head = None
+
+        def add_to_ll(ld: int, pr, head):
+            hd = head
+            node = ListNode(ld)
+            if pr:
+                pr.next = node
+            else:
+                hd = node
+            pr = node
+            return hd, pr
 
         while l1 or l2:
             l1_val = l1.val if l1 else 0
             l2_val = l2.val if l2 else 0
-            print(l1_val, l2_val)
             ls = l1_val + l2_val + carry
-            lower_dig = str(ls%10)
+            lower_dig = ls%10
             carry = ls//10
-            lsum += lower_dig
+
+            head, prev = add_to_ll(lower_dig, prev, head)
+
             l1 = l1.next if l1 else None
             l2 = l2.next if l2 else None
 
         if carry:
-            lsum += str(carry)
+            head, prev = add_to_ll(carry, prev, head)
 
-        print(f'lsum - {lsum}')
-
-        prev = None
-        for d in lsum:
-            node = ListNode(int(d))
-            if prev:
-                prev.next = node
-            else:
-                head = node
-            prev = node
-
-        print_list(head)
         return head
 
 
