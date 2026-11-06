@@ -81,22 +81,72 @@
 # Acceptance Rate
 # 60.8%
 
+from utils.print import print_list
+from utils.linked_list import build_list, to_list
+from typing import Optional, List
 
 # Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
 
 class Solution:
     def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        # run two pointers first and sec. first will start from i = 0 + n, sec will start at -1, a dummy node before the head
+        # once first reaches None, sec becomes the right node to pop
+
+        # 1, 2, 3, 4, 5 and n = 5
+        i=n
+
+        # move fst to nth position
+        fst = head # first position
+        while i>0: # n=5, 5-1 = 4
+            fst = fst.next #runs 4 times. doing head.next.next.next.next
+            i -= 1
+
+        # print('fst -')
+        # print_list(fst)
+        # now fst is at nth position
+        sec = ListNode(None, head) # dummy node -1
+        # print('sec -')
+        # print_list(sec)
+
+        while fst != None:
+            fst = fst.next # ind 6 is none
+            sec = sec.next # ind
+
+        # sec.next is now the node to pop
+        # 1, 2, 3 - 2 is popping, so sec is 1
+
+        if sec.next == head:
+            return head.next
+
+        sec.next = sec.next.next
+        
+        # print('head -')
+        print_list(head)
+
+
+
+        return head
 
 
 sol = Solution()
-head, n = [1,2,3,4], 2 # Output [1,2,4]
-# head, n = [5], 1 # Output []
-# head, n = [1,2], 2 # Output [2]
 
+# (head, n, expected)
+tests = [
+    ([1,2,3,4], 2, [1,2,4]),      # example 1
+    ([5], 1, []),                 # example 2: only node
+    ([1,2], 2, [2]),              # example 3: remove head
+    ([1,2], 1, [1]),              # remove tail
+    ([1,2,3,4,5], 5, [2,3,4,5]),  # remove head of longer list
+    ([1,2,3,4,5], 1, [1,2,3,4]),  # remove tail of longer list
+    ([1,2,3,4,5], 3, [1,2,4,5]),  # remove middle
+    (list(range(1, 31)), 15, [v for v in range(1, 31) if v != 16]),  # max size
+]
 
-
-print(sol.removeNthFromEnd(head, n))
+for vals, n, expected in tests:
+    got = to_list(sol.removeNthFromEnd(build_list(vals), n))
+    status = "PASS" if got == expected else "FAIL"
+    print(f"{status}  head={vals} n={n} -> {got}  expected {expected}")
