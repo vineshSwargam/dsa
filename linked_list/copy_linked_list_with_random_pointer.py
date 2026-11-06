@@ -78,23 +78,79 @@
 # 71.0%
 
 
-"""
+from utils.linked_list import Node, build_random_list, to_random_list, shares_nodes
+from utils.print import print_list
+from collections import defaultdict
+
 # Definition for a Node.
 class Node:
-    def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):
+    def __init__(self, x: int, next, random):
         self.val = int(x)
         self.next = next
         self.random = random
-"""
 
 class Solution:
-    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+    def copyRandomList(self, head):
+        if not head:
+            return None
+        
+        nmap = defaultdict(Node)
+        h = head
+
+
+    
+        while h:
+            nmap[h] = Node(h.val, h.next, h.random)
+            h = h.next
+
+        print('Mapping -')
+        for val in nmap.values():
+            print(f'val - {val.val} list -')
+            print_list(val)
+        
+        
+
+        h = head
+        while h:
+            copy = nmap[h]
+            if h.next != None:
+                copy.next = nmap[h.next]
+            if h.random != None:
+                copy.random = nmap[h.random]
+                
+            h = h.next
+
+        return nmap[head] # This works because neither part of it changes during the loops -
+        # head: the loops move h, so head stays on the original first node.
+        # nmap[head]: pass 1 stores the first node's copy there, and pass 2 only changes that copy's next and random, without replacing the entry.
+        # so head safely points to its deep copy version
 
 
 sol = Solution()
-head = [[3,null],[7,3],[4,0],[5,1]] # Output [[3,null],[7,3],[4,0],[5,1]]
-# head = [[1,null],[2,2],[3,2]] # Output [[1,null],[2,2],[3,2]]
+
+max_size = [[i, 99 - i] for i in range(100)]
 
 
+# (head, expected) - each node is [val, random_index]
+tests = [
+    ([[3,None],[7,3],[4,0],[5,1]], [[3,None],[7,3],[4,0],[5,1]]),  # example 1
+    # ([[1,None],[2,2],[3,2]], [[1,None],[2,2],[3,2]]),              # example 2
+    # ([], []),                                                      # empty list
+    # ([[1,None]], [[1,None]]),                                      # single node, random is null
+    # ([[1,0]], [[1,0]]),                                            # single node, random points to itself
+    # ([[1,None],[2,None],[3,None]], [[1,None],[2,None],[3,None]]),  # every random is null
+    # ([[7,2],[7,0],[7,None]], [[7,2],[7,0],[7,None]]),              # all values equal, randoms differ
+    # ([[1,3],[2,3],[3,3],[4,3]], [[1,3],[2,3],[3,3],[4,3]]),        # every random points to the last node
+    # ([[1,0],[2,0],[3,1],[4,2]], [[1,0],[2,0],[3,1],[4,2]]),        # randoms point backward or to itself
+    # ([[-100,1],[100,0]], [[-100,1],[100,0]]),                      # value limits
+    # (max_size, max_size),                                          # max size
+]
 
-print(sol.copyRandomList(head))
+for vals, expected in tests:
+    original = build_random_list(vals)
+    copied = sol.copyRandomList(original)
+    got = to_random_list(copied)
+    deep = not shares_nodes(original, copied)
+    status = "PASS" if got == expected and deep else "FAIL"
+    note = "" if deep else "  (shares nodes with the original)"
+    print(f"{status}  head={vals} -> {got}  expected {expected}{note}")

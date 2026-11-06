@@ -22,3 +22,42 @@ def to_list(head):
         vals.append(head.val)
         head = head.next
     return vals
+
+
+
+class Node:
+    def __init__(self, x, next=None, random=None):
+        self.val = int(x)
+        self.next = next
+        self.random = random
+
+
+def build_random_list(pairs):
+    """[[3, None], [7, 0]] -> 3 -> 7 -> None, where each pair is [val, random_index]. Returns the head."""
+    nodes = [Node(val) for val, _ in pairs]
+    for i, (_, random_index) in enumerate(pairs):
+        if i + 1 < len(nodes):
+            nodes[i].next = nodes[i + 1]
+        if random_index is not None:
+            nodes[i].random = nodes[random_index]
+    return nodes[0] if nodes else None
+
+
+def _node_indexes(head):
+    """Maps each node to its position. Stops if the list has a cycle."""
+    indexes = {}
+    while head and head not in indexes:
+        indexes[head] = len(indexes)
+        head = head.next
+    return indexes
+
+
+def to_random_list(head):
+    """3 -> 7 -> None -> [[3, None], [7, 0]]. A random pointing to a node outside this list shows as 'OUTSIDE'."""
+    indexes = _node_indexes(head)
+    return [[n.val, None if n.random is None else indexes.get(n.random, 'OUTSIDE')] for n in indexes]
+
+
+def shares_nodes(head1, head2):
+    """True if the two lists have any node object in common."""
+    return bool(_node_indexes(head1).keys() & _node_indexes(head2).keys())
