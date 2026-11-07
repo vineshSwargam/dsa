@@ -84,6 +84,7 @@
 
 class Solution:
     def merge_k_lists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        
 
 
 sol = Solution()
