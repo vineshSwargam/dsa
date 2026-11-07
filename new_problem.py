@@ -99,11 +99,7 @@ def scrape(url: str, headed: bool = False):
         # 2. Expand Topics / Recommended complexity / Hints / Company Tags so
         #    their bodies are part of the copied text. The bodies are only
         #    rendered on a real click, so click every collapsed summary.
-        summaries = page.locator(".question-tab details:not([open]) > summary")
-        for i in range(summaries.count()):
-            summaries.nth(0).click()
-            page.wait_for_timeout(150)
-        page.wait_for_timeout(500)
+        _expand_all_accordions(page)
 
         title = page.locator("h1.problem-title").first.inner_text().strip()
         left = page.locator(".question-tab").first.inner_text()
@@ -123,6 +119,32 @@ def scrape(url: str, headed: bool = False):
         browser.close()
 
     return title, left, code
+
+
+JS_ALL_ACCORDIONS_OPEN = """
+() => {
+  const all = [...document.querySelectorAll('.question-tab details')];
+  return all.length > 0 && all.every(d => d.open && d.innerText.trim().length > d.querySelector('summary').innerText.trim().length);
+}
+"""
+
+
+def _expand_all_accordions(page, passes: int = 3):
+    """Click every collapsed <summary> by index, then wait until each <details> is open with a body."""
+    for _ in range(passes):
+        summaries = page.locator(".question-tab details > summary")
+        for i in range(summaries.count()):
+            details = summaries.nth(i).locator("xpath=..")
+            if details.get_attribute("open") is None:
+                summaries.nth(i).click()
+                page.wait_for_timeout(200)
+        try:
+            page.wait_for_function(JS_ALL_ACCORDIONS_OPEN, timeout=3_000)
+            return
+        except PlaywrightTimeout:
+            continue
+    still_closed = page.locator(".question-tab details:not([open])").count()
+    print(f"warning: {still_closed} accordion section(s) did not expand; their text will be missing.")
 
 
 def _wait_for_stable_editor(page, attempts: int = 40, interval_ms: int = 250) -> str:
