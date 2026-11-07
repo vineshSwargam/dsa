@@ -13,10 +13,6 @@
 # A key is considered used if a get or a put operation is called on it.
 
 # Ensure that get and put each run in
-# 𝑂
-# (
-# 1
-# )
 # O(1) average time complexity.
 
 # Example 1:
@@ -93,20 +89,167 @@
 # Acceptance Rate
 # 47.7%
 
+class Node:
+    def __init__(self, key, val, prev = None, nxt = None):
+        self.key = key
+        self.val = val
+        self.next = nxt
+        self.prev = prev
 
+    # def get(self, key: int) -> int:
+    #     pass
+
+    # def put(self, key: int, value: int) -> None:
+    #     pass
+    
 class LRUCache:
+    # for getting and putting, hash will do it in O(1) time
+    # how to keep track of lru though?
 
     def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = {}
+        self.head = None
+        self.tail = None
 
+    def add_tail(self, node):
+        node.next = None
+        node.prev = self.tail
+        if self.tail != None:
+            self.tail.next = node
+        self.tail = node
+
+    def update_key_pos_in_cache(self, key):
+        node = self.cache[key]
+        prev = node.prev
+        nxt = node.next
+        if prev == None:
+            self.head = nxt
+        else:
+            prev.next = nxt
+        nxt.prev = prev
+    
+        self.add_tail(node)
 
     def get(self, key: int) -> int:
+        if key in self.cache:
+            if self.tail != self.cache[key]:
+                self.update_key_pos_in_cache(key)
+            return self.cache[key].val
+        return -1
 
+    def get_cache_len(self):
+        return len(self.cache)
+
+    def is_at_capacity(self):
+        if self.get_cache_len() == self.capacity:
+            return True
+        return False
 
     def put(self, key: int, value: int) -> None:
+        # key already in cache
+        if key in self.cache:
+            # update key val
+            self.cache[key].val = value
+            if self.tail != self.cache[key]:
+                self.update_key_pos_in_cache(key)
+
+        # key not in cache
+        elif key not in self.cache:
+            # cache at capacity, so remove head first
+            if self.is_at_capacity():
+                del self.cache[self.head.key]
+                nxt = None
+                if self.head.next != None:
+                    nxt = self.head.next
+                    nxt.prev = None
+                
+                self.head = nxt
+                if self.capacity == 1:
+                    self.tail = None
+
+            # add to cache map
+            self.cache[key] = Node(key, value)
+
+            # since key not in cache, this would be added at tail
+            self.add_tail(self.cache[key])
+
+            # head is either none or a node | None if no keys added yet or cap is 1
+            if self.head == None:
+                self.head = self.cache[key]
+            
+
+        
 
 
-lru = LRUCache()
+# (capacity, operations, expected) - expected has one result per operation, and put returns None
+tests = [
+    # example 1
+    (2, [("put",1,10), ("get",1), ("put",2,20), ("put",3,30), ("get",2), ("get",1)],
+        [None, 10, None, None, 20, -1]),
 
+    # get on an empty cache
+    (1, [("get",1)],
+        [-1]),
 
+    # capacity 1, the new key evicts the old one
+    (1, [("put",1,10), ("put",2,20), ("get",1), ("get",2)],
+        [None, None, -1, 20]),
 
-print(lru.get())
+    # capacity 1, updating a key doesn't evict it
+    (1, [("put",1,10), ("put",1,20), ("get",1)],
+        [None, None, 20]),
+
+    # updating an existing key at capacity evicts nothing
+    (2, [("put",1,10), ("put",2,20), ("put",1,11), ("get",1), ("get",2)],
+        [None, None, None, 11, 20]),
+
+    # get counts as a use, so 2 is evicted instead of 1
+    (2, [("put",1,10), ("put",2,20), ("get",1), ("put",3,30), ("get",2), ("get",1), ("get",3)],
+        [None, None, 10, None, -1, 10, 30]),
+
+    # put on an existing key counts as a use, so 2 is evicted instead of 1
+    (2, [("put",1,10), ("put",2,20), ("put",1,11), ("put",3,30), ("get",2), ("get",1), ("get",3)],
+        [None, None, None, None, -1, 11, 30]),
+
+    # get on a missing key changes nothing, so 1 is still the oldest
+    (2, [("put",1,10), ("put",2,20), ("get",9), ("put",3,30), ("get",1), ("get",2), ("get",3)],
+        [None, None, -1, None, -1, 20, 30]),
+
+    # key 0 and value 0 are real entries, not "missing"
+    (2, [("put",0,0), ("get",0), ("put",1,0), ("get",1)],
+        [None, 0, None, 0]),
+
+    # evicted key can be added back
+    (1, [("put",1,10), ("put",2,20), ("put",1,11), ("get",1), ("get",2)],
+        [None, None, None, 11, -1]),
+
+    # evictions happen oldest first
+    (3, [("put",1,10), ("put",2,20), ("put",3,30), ("put",4,40), ("put",5,50), ("get",1), ("get",2), ("get",3), ("get",4), ("get",5)],
+        [None, None, None, None, None, -1, -1, 30, 40, 50]),
+
+    # order keeps changing as keys are used
+    (2, [("put",1,1), ("put",2,2), ("get",1), ("put",3,3), ("get",2), ("put",4,4), ("get",1), ("get",3), ("get",4)],
+        [None, None, 1, None, -1, None, -1, 3, 4]),
+
+    # a node that became head through eviction can still move to the tail, so 3 is evicted instead of 2
+    (2, [("put",1,10), ("put",2,20), ("put",3,30), ("get",2), ("put",4,40), ("get",2), ("get",3), ("get",4)],
+        [None, None, None, 20, None, 20, -1, 40]),
+
+    # max capacity, keys 0-999 are evicted
+    (3000, [("put",i,i) for i in range(4000)] + [("get",999), ("get",1000), ("get",3999)],
+        [None]*4000 + [-1, 1000, 3999]),
+]
+
+passed = 0
+for capacity, operations, expected in tests:
+    lru = LRUCache(capacity)
+    got = [getattr(lru, op)(*args) for op, *args in operations]
+    status = "PASS" if got == expected else "FAIL"
+    passed += got == expected
+    if len(operations) <= 20:
+        print(f"{status}  capacity={capacity} {operations} -> {got}  expected {expected}")
+    else:
+        print(f"{status}  capacity={capacity} [{len(operations)} operations] -> last 3 {got[-3:]}  expected {expected[-3:]}")
+
+print(f"{passed}/{len(tests)} passed")
