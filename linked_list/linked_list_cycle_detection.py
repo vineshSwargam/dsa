@@ -62,6 +62,18 @@ class ListNode:
         self.next = next
 
 class Solution:
+    def using_fpsp(self, head: Optional[ListNode]) -> bool:
+        sp = fp = head
+        # fp = head.next.next if head != None and head.next != None else None
+
+        while fp and fp.next:
+            sp = sp.next
+            fp = fp.next.next
+            if fp == sp:
+                return True
+
+        return False
+
     def using_hash_map(self, head: Optional[ListNode]) -> bool:
         node_ind = defaultdict(int)
         cur_node = head

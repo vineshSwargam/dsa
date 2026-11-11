@@ -55,6 +55,24 @@ class ListNode:
         self.next = next
 
 class Solution:
+    def revision(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
+        head = cur = ListNode()
+
+        while list1 and list2:
+            if list1.val <= list2.val:
+                cur.next = list1
+                list1 = list1.next
+            else:
+                cur.next = list2
+                list2 = list2.next
+            cur = cur.next
+            
+        # flush out remaining elements
+        cur.next = list1 or list2
+
+        return head.next
+        
+
     def merge_two_lists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
         cur_n3 = n3 = ListNode()
 
@@ -68,7 +86,7 @@ class Solution:
     
             cur_n3 = cur_n3.next
         
-        cur_n3 = list1 or list2
+        cur_n3.next = list1 or list2
 
         return n3.next
 
@@ -101,4 +119,4 @@ def print_list(head: Optional[ListNode]) -> None:
     vals.append(f'CYCLE back to {node.val}' if node else 'None')
     print(' -> '.join(vals))
 
-print_list(sol.merge_two_lists(l1, l2))
+print_list(sol.revision(l1, l2))

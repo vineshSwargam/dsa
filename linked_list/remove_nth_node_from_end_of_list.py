@@ -122,7 +122,7 @@ class Solution:
         if sec.next == head:
             return head.next
 
-        sec.next = sec.next.next
+        sec.next = sec.next.next # sec = sec.next
         
         # print('head -')
         print_list(head)

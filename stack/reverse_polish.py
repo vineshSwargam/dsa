@@ -40,6 +40,8 @@
 # Hint 3
 # As the array has postfix expression, stack helps us to maintain the correct order of operations by ensuring that we always use the most recent operands (those closest to the operator) when performing the operation. After the iteration, the final result is left in the stack.
 
+from typing import List
+
 class Solution:
     def using_recursion(self, s):
         def evaluate(n):
@@ -87,13 +89,40 @@ class Solution:
         return stack.pop()
     
 
+    def revision(self, tokens: List[str]) -> int:
+        st = [] # st = stack
+        print(tokens)
+        ops = {
+            '*': lambda a, b: a*b,
+            '-': lambda a, b: a-b,
+            '+': lambda a, b: a+b,
+            '/': lambda a, b: a/b,
+        }
+
+        for t in tokens:
+            if t not in ops:
+                st.append(int(t))
+                print(t, st)
+                continue
+
+            # print('T IS IN ops -', t)
+            y = st.pop()
+            x = st.pop()
+            print('x, y', x, y, int(ops[t](x, y)))
+            st.append(int(ops[t](x, y)))
+
+        return st[-1]
+
+
     def eval_rpn(self, tokens) -> int:
         # return self.using_stack(tokens)
-        return self.using_recursion(tokens)
+        # return self.using_recursion(tokens)
+        return self.revision(tokens)
         
 
 sol = Solution()
 
 # tokens = ["1","2","+","3","*","4","-"] # 5
-tokens = ['18'] # 18
+tokens=["10","6","9","3","+","-11","*","/","*","17","+","5","+"] # 22
+# tokens = ['18'] # 18
 print(sol.eval_rpn(tokens))

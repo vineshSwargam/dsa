@@ -15,7 +15,47 @@
 # Output: [7]
 # git remote add origin git@github-personal.com:/leet.git
 
+from typing import List
 from collections import defaultdict
+import heapq
+
+def using_heap(nums: List[int], k: int) -> List[int]:
+    fr = defaultdict(int)
+    for n in nums:
+        fr[n] += 1
+    
+    heap = []
+    for num, freq in fr.items():
+        heapq.heappush(heap, (freq, num))
+        if len(heap) > k:
+            heapq.heappop(heap)
+
+    res = []
+    for i in range(k):
+        res.append(heapq.heappop(heap)[1])
+
+    return res
+
+def using_bucket_sort(nums: List[int], k: int) -> List[int]:
+    # first track the frequencies
+    # then add the elements to the list in the list([[]]) at the index of their frequency count
+    fr = [[] for i in range(len(nums) + 1)]
+
+    count = defaultdict(list)
+    for i, n in enumerate(nums):
+        count[n].append(i)
+
+    for num, idxs in count.items():
+        fr[len(idxs)].append(num)
+
+    res = []
+    for i in range(len(fr)-1, -1, -1):
+        for j in fr[i]:
+            res.append(j)
+            if len(res) == k:
+                return res
+    
+    return res
 
 def k_freq(nums, k):
     # naive hash map solution
@@ -57,8 +97,11 @@ def k_freq(nums, k):
 
 
 
+# sol = k_freq
+# sol = using_heap
+sol = using_bucket_sort
 
-k_freq([1, 3, 4, 3, 2, 2, 5, 2], 2)
-k_freq([1,2], 2)
+print(sol([1, 3, 4, 3, 2, 2, 5, 2], 2)) # [2, 3]
+print(sol([1,2], 2)) # [1, 2]
 
 

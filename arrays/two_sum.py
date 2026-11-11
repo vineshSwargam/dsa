@@ -58,7 +58,30 @@
 from collections import defaultdict
 
 class Solution:
-    def twoSum(self, numbers, target: int):
+    def using_sort_and_two_pointers(self, nums, target: int):
+        nm = []
+        for i, n in enumerate(nums):
+            nm.append([n, i])
+
+        nm.sort()
+        print(nm)
+        i=0
+        j=len(nm)-1
+
+        while i<j:
+            if nm[i][0]+nm[j][0] == target:
+                ind1, ind2 = nm[i][1], nm[j][1]
+                return [min(ind1, ind2), max(ind1, ind2)]
+            
+            if nm[i][0]+nm[j][0] > target:
+                j -= 1
+            else:
+                i += 1
+
+        return []
+
+    
+    def using_hash(self, nums, target: int):
         diff_d = defaultdict(int)
 
         # [3,4,5,6]
@@ -68,14 +91,19 @@ class Solution:
             if diff in diff_d:
                 return [diff_d[diff], i]
             diff_d[n] = i
+        
+    def twoSum(self, nums, target: int):
+        return self.using_sort_and_two_pointers(nums, target)
+        
 
 
 
 sol = Solution()
-# nums = [3,4,5,6]
-# target = 7 # Output: [0,1]
+nums = [3,4,5,6]
+target = 7 # Output: [0,1]
 
 # nums = [4,5,6]
 # target = 10 # Output: [0,2]
-nums, target = [5,5], 10 # Output: [0,1]
+# nums, target = [5,5], 10 # Output: [0,1]
+nums, target = [3, 2, 3], 6 # Output: [0,1]
 print(sol.twoSum(nums, target))

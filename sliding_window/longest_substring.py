@@ -49,6 +49,33 @@
 
 
 class Solution:
+    def revision(self, s: str) -> int:
+        slen = len(s)
+        if slen == 0:
+            return 0
+
+        i=0
+        j=1
+        sm = {}
+        sm[s[0]] = 0
+        l = 1
+        lmax = l
+
+        while j<slen:
+            print(s)
+            print(sm)
+            print(j, s[j])
+            if s[j] in sm:
+                i = sm[s[j]] + 1
+                l = j-i
+            sm[s[j]] = j
+            l += 1
+            print(l)
+            j+=1
+            lmax = max(l, lmax)
+            print('===========')
+        return lmax
+
     def length_of_longest_substring(self, s: str) -> int:
         sd = {}
         i = 0
@@ -84,31 +111,32 @@ s = "zxyzxyz" # Output: 3
 # s = "aabcabcd" # Output: 4
 # s = "aabcdebax" # i started at 1, b last found at 2, b now found at 6 so j must also be at 6. curr len is 5, reset len to (len - found index - start index)
 # s = "accde" # 
-s = """N3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
-<
-Y{
->
-M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
-<
-Y{
->
-M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
-<
-Y{
->
-M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
-<
-Y{
->
-M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
-<
-Y{
->
-M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
-<
-Y{
->
-M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P
-"""
+# s = """N3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
+# <
+# Y{
+# >
+# M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
+# <
+# Y{
+# >
+# M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
+# <
+# Y{
+# >
+# M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
+# <
+# Y{
+# >
+# M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
+# <
+# Y{
+# >
+# M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S<Y{>M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P|v@qsN3W-a`,:;bcze+7lnTAm!pu#S
+# <
+# Y{
+# >
+# M9CX(fHO2G$ij_oR%wdxyILZ&'DEk56Ut)V^rhB?g*1K0~4/QF.]J[8}P
+# """
 
-print(sol.length_of_longest_substring(s))
+# print(sol.length_of_longest_substring(s))
+print(sol.revision('abba'))

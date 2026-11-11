@@ -84,6 +84,24 @@ def print_list(head: Optional[ListNode]) -> None:
     sn = fn = head
 
 class Solution:
+    def revision(self, head: Optional[ListNode]) -> None: 
+        llst = [] # linked list stack
+        cur = head
+        while cur:
+            llst.append(cur)
+            cur = cur.next
+        
+        cur = head
+        tail = llst.pop() if len(tail) > 0 else None
+        
+        while cur and tail:
+            tail.next = cur.next
+            cur.next = tail
+            cur = tail.next 
+            tail = llst.pop()
+            tail.next = None
+
+
     def reorder_list(self, head: Optional[ListNode]) -> None:
 
         fn = sn = head

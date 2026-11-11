@@ -44,6 +44,9 @@
 # Hint 4
 # We can store the prefix maximum in an array by iterating from left to right and the suffix maximum in another array by iterating from right to left. For example, in [1, 5, 2, 3, 4], for the element 3, the prefix maximum is 5, and the suffix maximum is 4. Once these arrays are built, we can iterate through the array with index i and calculate the total water trapped at each position using the formula: min(prefix[i], suffix[i]) - height[i].
 
+
+from typing import List
+
 class Solution:
     def using_pref_suf(self, height):
         # lets write a stupid solution
@@ -106,9 +109,32 @@ class Solution:
         return area
 
 
+    def revision(self, height: List[int]) -> int:
+        hl = len(height)
+        lml=[0]*hl
+        rml = [0]*hl
+        lm = 0
+        rm = 0
+        i = 0
+        j = hl-1
+        wat = 0
+
+        while i < hl-1 and j >= 0:
+            lml[i] = lm =  max(height[i], lm)
+            rml[j] = rm = max(height[j], rm)
+            i+=1
+            j-=1
+
+        for i, h in enumerate(height):
+            wat += max(min(lml[i], rml[i]) - h, 0)
+
+        return wat
+
     def trap(self, height) -> int:
         # return self.using_pref_suf(height)
-        return self.using_two_pointers(height)
+        # return self.using_two_pointers(height)
+        return self.revision(height)
+
         
             
 

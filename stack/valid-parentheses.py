@@ -56,7 +56,34 @@
 from math import floor
 
 class Solution:
-    def is_valid(self, s):
+    def revision(self, s):
+        def is_valid(s):
+            par_stack = []
+            par_map = {
+                '(': ')',
+                '[': ']',
+                '{': '}',
+            }
+
+            if len(s)%2 != 0:
+                return False
+
+            for st in s:
+                if st in par_map:
+                    par_stack.append(st)
+                elif len(par_stack) == 0:
+                    return False
+                elif par_map[par_stack.pop()] != st:
+                    return False
+
+            if len(par_stack) > 0:
+                return False
+            return True
+
+        return is_valid(s)
+
+    
+    def original_sol(self, s):
         stack = []
         slen = len(s)
         # print(s)
@@ -89,7 +116,9 @@ class Solution:
 
         return True
 
-            
+    def is_valid(self, s):
+        # return self.original_sol(s)
+        return self.revision(s)
         
 
 
@@ -97,12 +126,12 @@ class Solution:
 
 sol = Solution()
 
-s = "[]" # true
-s = "([{}])" # true
-s = "[(])" # false
-# s = "()[()]" # false
-s = "()[()])" # false
-# s = "[[" # false
+# s = "[]" # true
+# s = "([{}])" # true
+# s = "[(])" # false
+# # s = "()[()]" # false
+# s = "()[()])" # false
+# # s = "[[" # false
 s = "]]" # false
 
-# print(sol.is_valid(s))
+print(sol.is_valid(s))
