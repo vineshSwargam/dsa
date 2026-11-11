@@ -17,13 +17,13 @@ def dfs(mat, n):
     mat_rows = len(mat)
     mat_cols = len(mat[0]) if mat_rows > 0 else 0
     st = [n] # stack
-    visited = []
+    visited = set()
 
     while st:
         node = st.pop()
         if node in visited:
             continue
-        visited.append(node)
+        visited.add(node)
         i=node
         j=0
 
