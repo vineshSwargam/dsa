@@ -74,7 +74,40 @@
 # For example, consider the arrays A = [1, 2, 3, 4, 5] and B = [1, 2, 3, 4, 5, 6, 7, 8]. When we select x = 2, we take 4 elements from array B. However, this partition is not valid because value 4 from the left partition of array B is greater than the value 3 from the right partition of array A. So, we should try to take more elements from array A to make the partition valid. Binary search will eventually help us find a valid partition.
 
 class Solution:
-    
+    def bin_search(self, l1, l2, l, r, total):
+
+        i = (l+r)//2 # say 2 for l1 of 5 
+        half = total//2
+        j = half-i # say half is 5 since l1 and l2 have 5 each. so j is 5-2=3
+
+        # we are checking index i-1 = 2-1 = 1, and j=3(which is first el on the right half)
+        l1_left  = l1[i-1] if i > 0       else float('-inf')
+        l1_right = l1[i]   if i < len(l1) else float('inf')
+        l2_left  = l2[j-1] if j > 0       else float('-inf')
+        l2_right = l2[j]   if j < len(l2) else float('inf')
+
+        if l1_left > l2_right: 
+            # move i lower
+            return self.bin_search(l1, l2, l, i-1, total)
+        if l1_right < l2_left:
+            # move i higher
+            return self.bin_search(l1, l2, i+1, r, total)
+        
+        # it is validate; Calculate median now
+        if total%2 == 0: # two middles exist, have to take avg of both
+            return ( max(l1_left, l2_left) + min(l1_right, l2_right) )/2
+        else:
+            return min(l1_right, l2_right)
+
+
+    def find_median_sorted_arrays(self, nums1: List[int], nums2: List[int]) -> float:
+        l1, l2 = (nums1, nums2) if len(nums1) < len(nums2) else (nums2, nums1)
+        # l1 is smaller
+
+        return self.bin_search(l1, l2, 0, len(l1), (len(l1)+len(l2)))
+
+    # Above was revision
+
 
     def find_median_sorted_arrays(self, nums1, nums2) -> float:
         n1l = len(nums1)

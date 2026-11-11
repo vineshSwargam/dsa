@@ -52,6 +52,21 @@
 
 class Solution:
     def product_except_self(self, nums):
+        nlen = len(nums)
+        res = [0]*nlen
+        pref = 1
+        suf = 1
+
+        for i in range(nlen):
+            res[i] = pref
+            pref *= nums[i]
+        
+        for i in range(nlen-1, -1, -1):
+            res[i] *= suf
+            suf *= nums[i]
+        
+        return res
+        
         # prod = 1
         # prod_zero = 1
         # zero_counter = 0
@@ -124,23 +139,24 @@ class Solution:
         # return res
 
         # optimised prefix postfix
-        n = len(nums)
-        res = [0]*n
-        prefix = 1
-        for i in range(n):
-            res[i] = prefix
-            prefix *= nums[i]
+        # n = len(nums)
+        # res = [0]*n
+        # prefix = 1
+        # for i in range(n):
+        #     res[i] = prefix
+        #     prefix *= nums[i]
         
-        postfix = 1
-        for i in range(n-1, -1, -1):
-            res[i] *= postfix
-            postfix *= nums[i]
+        # postfix = 1
+        # for i in range(n-1, -1, -1):
+        #     res[i] *= postfix
+        #     postfix *= nums[i]
 
-        return res
+        # return res
 
 
 
 sol = Solution()
+print(sol.product_except_self([1, 2, 4, 6])) # [48, 24, 12, 18]
 print(sol.product_except_self([1, 2, 3, 4, 5]))
 # print(sol.product_except_self([1, 2, 4, 6, 0]))
 # print(sol.product_except_self([-1,0,1,2,3]))
