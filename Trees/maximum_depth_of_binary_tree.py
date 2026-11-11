@@ -73,6 +73,32 @@
 
 class Solution:
     def max_depth(self, root: Optional[TreeNode]) -> int:
+        st = [root] if root else [] # stack for dfs
+        visited = set()
+        depth = 1 if root else 0
+        max_d = depth
+
+        while st:
+            cur = st.pop()
+
+            if cur in visited:
+                continue
+            
+            visited.add(cur)
+
+            if cur.left:
+                st.append(cur.left)
+
+            if cur.right:
+                st.append(cur.right)
+            
+            if not cur.right and not cur.left:
+                max_d = max(depth, max_d)
+                depth =0
+            
+            depth += 1
+
+        return max_d
 
 
 sol = Solution()
