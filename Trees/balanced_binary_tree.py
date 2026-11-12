@@ -64,7 +64,10 @@
 # 66.2%
 
 
-# Definition for a binary tree node.
+from typing import Optional
+from utils.tree import TreeNode, build_tree
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -90,15 +93,92 @@ class Solution:
         depth(root)
         return is_valid
 
+#                   1
+#                    \
+#                     2
+#                    / \
+#                   3   4
+#                   /
+#                   5
+
+#                 1
+#                /
+#               2
+#              / \
+#             3   4
+#            /     \
+#           5       6
+#          /         \
+#         7           8
+
+    def using_iterative_dfs(self, root):
+        st = [root] if root else [] # stack
+        dmap = { None: 0 } # dmap = depth map of nodes
+
+        while st and is_valid:
+            node = st[-1]
+
+            if node.left and node.left not in dmap:
+                st.append(node.left)
+            elif node.right and node.right not in dmap:
+                st.append(node.right)
+            else:
+                node = st.pop()
+
+                ld = dmap[node.left]
+                rd = dmap[node.right]
+
+                if not -1 <= ld-rd <= 1:
+                    return False
+
+                dmap[node] = 1+max(ld, rd)
+
+        return True            
+
+
     def is_balanced(self, root: Optional[TreeNode]) -> bool:
-        self.using_recursive_dfs(root)
+        # return self.using_recursive_dfs(root)
+        return self.using_iterative_dfs(root)
 
 
 sol = Solution()
-root = [1,2,3,null,null,4] # Output true
-# root = [1,2,3,null,null,4,null,5] # Output false
-# root = [] # Output true
 
+# run from the repo root: python3 -m Trees.balanced_binary_tree
+# (input, expected) - input is in LeetCode level-order form, None means "no node here"
+left_chain_1000 = [0] + [x for v in range(1, 1000) for x in (v, None)]   # 1000 nodes, all left children
 
+tests = [
+    ([1,2,3,None,None,4], True),                    # example 1
+    ([1,2,3,None,None,4,None,5], False),            # example 2
+    ([], True),                                     # example 3, empty tree
+    ([1], True),                                    # single node
+    ([1,2], True),                                  # one child, heights 1 and 0 differ by exactly 1
+    ([1,None,2], True),                             # same, right side
+    ([1,2,None,3], False),                          # left chain of 3, root's sides are 2 and 0
+    ([1,None,2,None,3], False),                     # right chain of 3
+    ([1,2,3,4,5,6,7], True),                        # perfect tree
+    ([3,9,20,None,None,15,7], True),                # right side one level deeper
+    ([1,2,2,3,3,None,None,4,4], False),             # left side two levels deeper than the right
+    ([1,2,3,4,None,5,6,7,None,8], False),           # root looks fine (3 vs 3) but node 2 is off by 2 underneath
+    ([1,2,3,4,5,6,None,7], True),                   # off by one at several nodes, still balanced
+    ([1,2,3,4,None,None,5], True),                  # V shape, each side a chain of 2
+    ([1,2,3,4,None,None,5,6,None,None,7], False),   # V shape, each side a chain of 3
+    ([5,5,5,5], True),                              # all values equal
+    ([-1000,1000,-1000,None,0], True),              # negatives and value limits
+    (list(range(1000)), True),                      # complete tree, 1000 nodes (max size)
+    (left_chain_1000, False),                       # 1000 nodes in a chain, max depth
+]
 
-print(sol.is_balanced(root))
+passed = 0
+for vals, expected in tests:
+    shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
+    try:
+        got = sol.is_balanced(build_tree(vals))
+    except RecursionError:
+        print(f"ERROR {shown} -> RecursionError (too deep for Python's default limit)  expected {expected}")
+        continue
+    status = "PASS" if got == expected else "FAIL"
+    passed += got == expected
+    print(f"{status}  {shown} -> {got}  expected {expected}")
+
+print(f"{passed}/{len(tests)} passed")
