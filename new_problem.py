@@ -19,17 +19,30 @@ What it does:
        one live, the rest commented out) and a call to the solution method.
     4. Writes <snake_case_title>.py into the current directory.
     5. git checkout -b <kebab-case-title>, commit "init", push -u origin.
+    6. Opens a pull request titled after the branch ("subtree-of-another-tree"
+       becomes "Subtree of another tree") with the problem URL as the body.
+       Uses the GitHub REST API with the token in $DSA_GITHUB_TOKEN; without a
+       token it opens the prefilled "compare" page in your browser instead so
+       you only have to click "Create pull request". Never uses the gh CLI.
 
 One-time setup:
     venv/bin/pip install playwright
     venv/bin/playwright install chromium
+    # optional, for automatic PR creation: a fine-grained personal access token
+    # on the *personal* GitHub account with "Pull requests: read and write" on
+    # this repo, exported as DSA_GITHUB_TOKEN in your shell profile.
 """
 
 import argparse
+import json
 import os
 import re
 import subprocess
 import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+import webbrowser
 from pathlib import Path
 
 try:
@@ -272,6 +285,70 @@ def commit_and_push(branch: str, file_path: Path):
 
 
 # --------------------------------------------------------------------------- #
+# Pull request
+# --------------------------------------------------------------------------- #
+TOKEN_ENV = "DSA_GITHUB_TOKEN"
+BASE_BRANCH = "main"
+
+
+def pr_title(branch: str) -> str:
+    """subtree-of-another-tree -> Subtree of another tree"""
+    return branch.replace("-", " ").capitalize()
+
+
+def repo_slug(cwd: Path) -> str:
+    """owner/repo parsed from the origin URL (ssh alias or https)."""
+    url = subprocess.run(
+        ["git", "remote", "get-url", "origin"], cwd=cwd, capture_output=True, text=True, check=True
+    ).stdout.strip()
+    m = re.search(r"[:/]([^/:]+/[^/]+?)(?:\.git)?/?$", url)
+    if not m:
+        sys.exit(f"Could not work out owner/repo from origin url '{url}'.")
+    return m.group(1)
+
+
+def compare_url(slug: str, branch: str, title: str, body: str) -> str:
+    query = urllib.parse.urlencode({"expand": "1", "title": title, "body": body})
+    return f"https://github.com/{slug}/compare/{BASE_BRANCH}...{branch}?{query}"
+
+
+def create_pull_request(branch: str, body: str, cwd: Path):
+    slug = repo_slug(cwd)
+    title = pr_title(branch)
+    token = os.environ.get(TOKEN_ENV)
+
+    if token:
+        req = urllib.request.Request(
+            f"https://api.github.com/repos/{slug}/pulls",
+            data=json.dumps({"title": title, "head": branch, "base": BASE_BRANCH, "body": body}).encode(),
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+                "Content-Type": "application/json",
+                "User-Agent": "new_problem.py",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                pr = json.load(resp)
+            print(f"PR created: {pr['html_url']}")
+            return
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode(errors="replace")
+            print(f"GitHub API refused the PR ({e.code}): {detail[:300]}")
+        except urllib.error.URLError as e:
+            print(f"Could not reach the GitHub API: {e.reason}")
+        print("Falling back to the compare page.")
+    else:
+        print(f"{TOKEN_ENV} is not set, so opening the prefilled compare page instead.")
+
+    url = compare_url(slug, branch, title, body)
+    print(f"Create the PR here: {url}")
+    webbrowser.open(url)
+
+
+# --------------------------------------------------------------------------- #
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("url", help="NeetCode problem URL")
@@ -300,7 +377,8 @@ def main():
         return
 
     commit_and_push(branch, file_path)
-    print(f"Done: branch '{branch}' pushed.")
+    print(f"Branch '{branch}' pushed.")
+    create_pull_request(branch, body=args.url, cwd=file_path.parent)
 
 
 if __name__ == "__main__":
