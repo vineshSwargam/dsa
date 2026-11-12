@@ -100,6 +100,19 @@ class Solution:
 
         return max_d
 
+    def using_tuples_improved(self, root: Optional[TreeNode]) -> int:
+        st = [(root, 1)] if root else [] # stack for dfs
+        max_d = 0
+
+        while st:
+            node, dep = st.pop()
+            if node:
+                max_d = max(dep, max_d)
+                st.append((node.left, dep+1))
+                st.append((node.right, dep+1))
+
+        return max_d
+
 
     # top down recursion
     def using_recursion(self, root: Optional[TreeNode]) -> int:
