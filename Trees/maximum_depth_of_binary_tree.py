@@ -101,6 +101,7 @@ class Solution:
         return max_d
 
 
+    # top down recursion
     def using_recursion(self, root: Optional[TreeNode]) -> int:
         def depth(node, dep):
             if not node.left and not node.right:
@@ -114,11 +115,21 @@ class Solution:
             return 0
         return depth(root, 1)
 
+    # bottom up recursion
+    def using_bottom_up_recursion(self, root: Optional[TreeNode]) -> int:
+        def depth(node):
+            if not node:
+                return 0
+            return max(1+depth(node.left), 1+depth(node.right))
+        
+        return depth(root)
+
 
 
     def max_depth(self, root: Optional[TreeNode]) -> int:
         # return self.using_tuples(root)
-        return self.using_recursion(root)
+        # return self.using_recursion(root)
+        return self.using_bottom_up_recursion(root)
         
 
 
