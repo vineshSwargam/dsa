@@ -91,15 +91,45 @@ class Solution:
 
     def using_recursive(self, p, q):
         def check_node(a, b):
-            if a.val != b.val or a.left != b.left or a.right != b.right:
+            if not a and not b:
+                return True
+
+            if not a or not b or a.val != b.val:
+                print('Val not matching')
                 return False
             
             return check_node(a.left, b.left) and check_node(a.right, b.right)
         
         return check_node(p, q)
 
+
+
+    def using_iter_dfs(self, p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:
+        st = [(p, q)] # stack
+
+        while st:
+            a, b = st.pop()
+
+            if not a and not b:
+                continue
+
+            if not a or not b or a.val != b.val:
+                print('Val not matching')
+                return False
+
+            st.append((a.left, b.left))
+            st.append((a.right, b.right))
+
+        return True
+
+        
+
+
+
+
     def is_same_tree(self, p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:
-        return self.using_recursive(p, q)
+        # return self.using_recursive(p, q)
+        return self.using_iter_dfs(p, q)
 
 
 sol = Solution()
@@ -114,27 +144,27 @@ right_chain_100 = [0] + [x for v in range(1, 100) for x in (None, v)]  # same va
 
 tests = [
     ([1,2,3], [1,2,3], True),                       # example 1
-    # ([4,7], [4,None,7], False),                     # example 2, same values, child on the other side
-    # ([1,2,3], [1,3,2], False),                      # example 3, children swapped
-    # ([], [], True),                                 # both empty
-    # ([1], [], False),                               # only q is empty
-    # ([], [1], False),                               # only p is empty
-    # ([1], [1], True),                               # single node, same
-    # ([1], [2], False),                              # single node, different value
-    # ([0,0], [0], False),                            # value 0 vs missing node, catches "if node.val" bugs
-    # ([1,1], [1,None,1], False),                     # all values equal, only the shape differs
-    # ([2,1], [1,None,2], False),                     # same values, different root
-    # ([1,2,3,4,5,6,7], [1,2,3,4,5,6,7], True),       # perfect tree, same
-    # ([1,2,3,4,5,6,7], [1,2,3,4,5,6,8], False),      # differs only at the last leaf
-    # ([1,2,3,4], [1,2,3,4,5], False),                # q has one extra node deep down
-    # ([1,2,3,4,5], [1,2,3,4], False),                # p has one extra node deep down
-    # ([5,5,5,5,5], [5,5,5,5,5], True),               # duplicates, same shape
-    # ([-100,0,100], [-100,0,100], True),             # negatives and value limits, same
-    # ([-100,0,100], [100,0,-100], False),            # value limits swapped
-    # (full_100, full_100, True),                     # 100 nodes each, same
-    # (full_100, full_100_last_changed, False),       # 100 nodes, only the last value differs
-    # (left_chain_100, left_chain_100, True),         # 100-node chain, same
-    # (left_chain_100, right_chain_100, False),       # same values, mirrored chain
+    ([4,7], [4,None,7], False),                     # example 2, same values, child on the other side
+    ([1,2,3], [1,3,2], False),                      # example 3, children swapped
+    ([], [], True),                                 # both empty
+    ([1], [], False),                               # only q is empty
+    ([], [1], False),                               # only p is empty
+    ([1], [1], True),                               # single node, same
+    ([1], [2], False),                              # single node, different value
+    ([0,0], [0], False),                            # value 0 vs missing node, catches "if node.val" bugs
+    ([1,1], [1,None,1], False),                     # all values equal, only the shape differs
+    ([2,1], [1,None,2], False),                     # same values, different root
+    ([1,2,3,4,5,6,7], [1,2,3,4,5,6,7], True),       # perfect tree, same
+    ([1,2,3,4,5,6,7], [1,2,3,4,5,6,8], False),      # differs only at the last leaf
+    ([1,2,3,4], [1,2,3,4,5], False),                # q has one extra node deep down
+    ([1,2,3,4,5], [1,2,3,4], False),                # p has one extra node deep down
+    ([5,5,5,5,5], [5,5,5,5,5], True),               # duplicates, same shape
+    ([-100,0,100], [-100,0,100], True),             # negatives and value limits, same
+    ([-100,0,100], [100,0,-100], False),            # value limits swapped
+    (full_100, full_100, True),                     # 100 nodes each, same
+    (full_100, full_100_last_changed, False),       # 100 nodes, only the last value differs
+    (left_chain_100, left_chain_100, True),         # 100-node chain, same
+    (left_chain_100, right_chain_100, False),       # same values, mirrored chain
 ]
 
 passed = 0
