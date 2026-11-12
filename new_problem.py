@@ -393,31 +393,58 @@ def pr_body(title: str, url: str, left: str, file_path: Path) -> str:
     return "\n".join(parts)
 
 
+class GitHubApiError(Exception):
+    def __init__(self, code: int, detail: str):
+        super().__init__(f"{code}: {detail}")
+        self.code, self.detail = code, detail
+
+
+def _github_api(method: str, path: str, token: str, payload: dict = None):
+    """One GitHub REST call. Returns the decoded JSON, raises GitHubApiError on a 4xx/5xx."""
+    req = urllib.request.Request(
+        f"https://api.github.com{path}",
+        data=json.dumps(payload).encode() if payload is not None else None,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json",
+            "User-Agent": "new_problem.py",
+        },
+        method=method,
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as e:
+        raise GitHubApiError(e.code, e.read().decode(errors="replace")) from None
+
+
 def create_pull_request(branch: str, body: str, cwd: Path):
+    """Open a PR for `branch`; if one is already open, refresh its title and body instead."""
     slug = repo_slug(cwd)
     title = pr_title(branch)
     token = os.environ.get(TOKEN_ENV)
 
     if token:
-        req = urllib.request.Request(
-            f"https://api.github.com/repos/{slug}/pulls",
-            data=json.dumps({"title": title, "head": branch, "base": BASE_BRANCH, "body": body}).encode(),
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Accept": "application/vnd.github+json",
-                "Content-Type": "application/json",
-                "User-Agent": "new_problem.py",
-            },
-            method="POST",
-        )
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                pr = json.load(resp)
-            print(f"PR created: {pr['html_url']}")
+            try:
+                pr = _github_api("POST", f"/repos/{slug}/pulls", token,
+                                 {"title": title, "head": branch, "base": BASE_BRANCH, "body": body})
+                print(f"PR created: {pr['html_url']}")
+                return
+            except GitHubApiError as e:
+                if not (e.code == 422 and "already exists" in e.detail):
+                    raise
+            owner = slug.split("/")[0]
+            existing = _github_api("GET", f"/repos/{slug}/pulls?state=open&head={owner}:{branch}", token)
+            if not existing:
+                raise GitHubApiError(422, f"GitHub says a PR exists for {branch} but no open one was found.")
+            pr = _github_api("PATCH", f"/repos/{slug}/pulls/{existing[0]['number']}", token,
+                             {"title": title, "body": body})
+            print(f"PR already existed, refreshed its title and body: {pr['html_url']}")
             return
-        except urllib.error.HTTPError as e:
-            detail = e.read().decode(errors="replace")
-            print(f"GitHub API refused the PR ({e.code}): {detail[:300]}")
+        except GitHubApiError as e:
+            print(f"GitHub API refused the request ({e.code}): {e.detail[:300]}")
         except urllib.error.URLError as e:
             print(f"Could not reach the GitHub API: {e.reason}")
         print("Falling back to the compare page.")
