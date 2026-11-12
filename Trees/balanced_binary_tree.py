@@ -72,7 +72,26 @@
 #         self.right = right
 
 class Solution:
+
+    def using_recursive_dfs(self, root):
+        is_valid = True
+
+        def depth(node):
+            if not node:
+                return 0
+            nonlocal is_valid
+            ld = depth(node.left) # ld = left depth
+            rd = depth(node.right) # rd = right depth
+            if not -1 <= ld-rd <= 1:
+                is_valid = False
+
+            return 1 + max(ld, rd)
+
+        depth(root)
+        return is_valid
+
     def is_balanced(self, root: Optional[TreeNode]) -> bool:
+        self.using_recursive_dfs(root)
 
 
 sol = Solution()
