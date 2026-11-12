@@ -78,7 +78,25 @@
 #         self.right = right
 
 class Solution:
+#                   1
+#                    \
+#                     2
+#                    / \
+#                   3   4
+#                   /
+#                   5
+
+    def recursive(self, p, q):
+        def check_node(a, b):
+            if a.val != b.val or a.left != b.left or a.right != b.right:
+                return False
+            
+            return check_node(a.left, b.left) and check_node(a.right, b.right)
+        
+        return check_node(p, q)
+
     def is_same_tree(self, p: Optional[TreeNode], q: Optional[TreeNode]) -> bool:
+        return self.using_recursive(p, q)
 
 
 sol = Solution()
