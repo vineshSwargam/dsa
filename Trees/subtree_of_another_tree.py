@@ -73,7 +73,10 @@
 # 54.6%
 
 
-# Definition for a binary tree node.
+from typing import Optional
+from utils.tree import TreeNode, build_tree
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -85,9 +88,53 @@ class Solution:
 
 
 sol = Solution()
-root, subRoot = [1,2,3,4,5], [2,4,5] # Output true
-# root, subRoot = [1,2,3,4,5,null,null,6], [2,4,5] # Output false
 
+# run from the repo root: python3 -m Trees.subtree_of_another_tree
+# (root, subRoot, expected) - both trees in LeetCode level-order form, None means "no node here"
+def left_chain(vals):
+    """[a, b, c] -> a with left child b with left child c, in level-order form"""
+    return vals[:1] + [x for v in vals[1:] for x in (v, None)]
 
+chain_0_to_1999 = left_chain(list(range(2000)))                 # 2000 nodes (max root size), values 0..1999
+chain_1000_to_1999 = left_chain(list(range(1000, 2000)))        # its bottom 1000 nodes
+ones_2000 = left_chain([1] * 2000)                              # 2000 nodes, all 1
+ones_1000 = left_chain([1] * 1000)                              # 1000 nodes, all 1
+ones_999_then_2 = left_chain([1] * 999 + [2])                   # 1000 nodes, all 1 except the last
 
-print(sol.is_subtree(root, subRoot))
+tests = [
+    ([1,2,3,4,5], [2,4,5], True),                               # example 1
+    ([1,2,3,4,5,None,None,6], [2,4,5], False),                  # example 2, 4 has an extra child 6 in root
+    ([1], [1], True),                                           # single node, same
+    ([1], [2], False),                                          # single node, different
+    ([1,2,3], [1,2,3], True),                                   # the whole tree counts as its own subtree
+    ([1,2], [2], True),                                         # subRoot is a leaf of root
+    ([1,2], [1], False),                                        # root's 1 has a child, subRoot's 1 doesn't
+    ([1], [1,2], False),                                        # subRoot bigger than root
+    ([3,4,5,1,2], [4,1,2], True),                               # match on the left side
+    ([3,4,5,1,2,None,None,None,None,0], [4,1,2], False),        # same, but 2 has an extra child 0
+    ([1,2,3,4,5], [2,4], False),                                # subRoot matches the top of 2 but not all of it
+    ([1,2,3,4], [2,None,4], False),                             # same values, 4 on the wrong side
+    ([1,2,3,5,None,2,None,None,None,4], [2,4], True),           # first 2 doesn't match, the second one does
+    ([1,1,1,1,1,1,1], [1,1,1], True),                           # all values equal, shape decides
+    ([1,1,1,1,1,1,1], [1,1], False),                            # all equal, but no node has only a left child
+    ([1,1], [1], True),                                         # duplicates, the leaf matches
+    ([12], [2], False),                                         # catches string-matching bugs ("12" contains "2")
+    ([-10000,10000], [10000], True),                            # value limits
+    (chain_0_to_1999, chain_1000_to_1999, True),                # 2000-node root, match is the bottom 1000
+    (ones_2000, ones_1000, True),                               # all 1s, only the node at depth 1000 matches
+    (ones_2000, ones_999_then_2, False),                        # all 1s, every node almost matches (slowest case)
+]
+
+passed = 0
+for root_vals, sub_vals, expected in tests:
+    shown = f"root={root_vals} subRoot={sub_vals}" if len(root_vals) + len(sub_vals) <= 24 else f"root=[{len(root_vals)} values] subRoot=[{len(sub_vals)} values]"
+    try:
+        got = sol.is_subtree(build_tree(root_vals), build_tree(sub_vals))
+    except RecursionError:
+        print(f"ERROR {shown} -> RecursionError (too deep for Python's default limit)  expected {expected}")
+        continue
+    status = "PASS" if got == expected else "FAIL"
+    passed += got == expected
+    print(f"{status}  {shown} -> {got}  expected {expected}")
+
+print(f"{passed}/{len(tests)} passed")
