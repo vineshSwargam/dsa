@@ -287,7 +287,7 @@ def commit_and_push(branch: str, file_path: Path):
 # --------------------------------------------------------------------------- #
 # Pull request
 # --------------------------------------------------------------------------- #
-TOKEN_ENV = "DSA_GITHUB_TOKEN"
+TOKEN_ENV = "PERSONAL_GITHUB_TOKEN"
 BASE_BRANCH = "main"
 
 
