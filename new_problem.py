@@ -20,17 +20,20 @@ What it does:
     4. Writes <snake_case_title>.py into the current directory.
     5. git checkout -b <kebab-case-title>, commit "init", push -u origin.
     6. Opens a pull request titled after the branch ("subtree-of-another-tree"
-       becomes "Subtree of another tree") with the problem URL as the body.
-       Uses the GitHub REST API with the token in $DSA_GITHUB_TOKEN; without a
-       token it opens the prefilled "compare" page in your browser instead so
-       you only have to click "Create pull request". Never uses the gh CLI.
+       becomes "Subtree of another tree"). The body is a full write-up built
+       from the scraped page: difficulty, topics, link, problem statement,
+       examples, constraints, target complexity, the file added, and a
+       checklist. Uses the GitHub REST API with the token in
+       $PERSONAL_GITHUB_TOKEN; without a token it opens the prefilled
+       "compare" page in your browser instead so you only have to click
+       "Create pull request". Never uses the gh CLI.
 
 One-time setup:
     venv/bin/pip install playwright
     venv/bin/playwright install chromium
     # optional, for automatic PR creation: a fine-grained personal access token
     # on the *personal* GitHub account with "Pull requests: read and write" on
-    # this repo, exported as DSA_GITHUB_TOKEN in your shell profile.
+    # this repo, exported as PERSONAL_GITHUB_TOKEN in your shell profile.
 """
 
 import argparse
@@ -312,6 +315,84 @@ def compare_url(slug: str, branch: str, title: str, body: str) -> str:
     return f"https://github.com/{slug}/compare/{BASE_BRANCH}...{branch}?{query}"
 
 
+def repo_root(cwd: Path) -> Path:
+    out = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=cwd, capture_output=True, text=True, check=True)
+    return Path(out.stdout.strip())
+
+
+def parse_left_panel(left: str) -> dict:
+    """Pull the pieces of the Question tab text apart for the PR description.
+
+    Every field is optional; anything that cannot be found is left empty.
+    """
+    text = left.replace("\r", "")
+    lines = text.split("\n")
+    info = {"difficulty": "", "statement": "", "examples": [], "constraints": [], "topics": "", "complexity": ""}
+
+    if len(lines) > 1 and lines[1].strip() in ("Easy", "Medium", "Hard"):
+        info["difficulty"] = lines[1].strip()
+
+    # Statement: from the first blank line (end of the title/tags header) up to the first example or the constraints.
+    m = re.search(r"\n\s*\n(.*?)(?=\n\s*Example \d+:|\n\s*Constraints:)", text, re.S)
+    if m:
+        info["statement"] = m.group(1).strip()
+
+    info["examples"] = [
+        re.sub(r"\n{2,}", "\n", block.strip())
+        for block in re.findall(r"Example \d+:\s*\n(.*?)(?=\n\s*Example \d+:|\n\s*Constraints:|\Z)", text, re.S)
+    ]
+
+    m = re.search(r"Constraints:\s*\n(.*?)(?=\n\s*\n\s*\n|\n\s*Topics\s*\n|\Z)", text, re.S)
+    if m:
+        info["constraints"] = [c.strip() for c in m.group(1).splitlines() if c.strip()]
+
+    # The accordion headings are followed by a blank line and then their body;
+    # the tag row at the top ("Topics" directly followed by "Company Tags") is not.
+    m = re.search(r"\nTopics\s*\n\s*\n(.+)", text)
+    if m:
+        info["topics"] = m.group(1).strip()
+    m = re.search(r"Recommended Time & Space Complexity\s*\n\s*\n(.+)", text)
+    if m:
+        info["complexity"] = m.group(1).strip()
+    return info
+
+
+def pr_body(title: str, url: str, left: str, file_path: Path) -> str:
+    info = parse_left_panel(left)
+    try:
+        shown_path = file_path.resolve().relative_to(repo_root(file_path.parent))
+    except (ValueError, subprocess.CalledProcessError):
+        shown_path = file_path.name
+
+    parts = [f"## {title}", ""]
+    if info["difficulty"]:
+        parts.append(f"**Difficulty:** {info['difficulty']}")
+    if info["topics"]:
+        parts.append(f"**Topics:** {info['topics']}")
+    parts += [f"**Problem:** {url}", ""]
+
+    if info["statement"]:
+        parts += ["### Problem", "", info["statement"], ""]
+    if info["examples"]:
+        parts += ["### Examples", ""]
+        for i, example in enumerate(info["examples"], 1):
+            parts += [f"**Example {i}**", "```", example, "```", ""]
+    if info["constraints"]:
+        parts += ["### Constraints", ""] + [f"- {c}" for c in info["constraints"]] + [""]
+    if info["complexity"]:
+        parts += ["### Target complexity", "", info["complexity"], ""]
+
+    parts += [
+        "### Files", "", f"- `{shown_path}`", "",
+        "### Checklist", "",
+        "- [ ] Brute force",
+        "- [ ] Optimal solution",
+        "- [ ] Test cases pass",
+        "",
+    ]
+    return "\n".join(parts)
+
+
 def create_pull_request(branch: str, body: str, cwd: Path):
     slug = repo_slug(cwd)
     title = pr_title(branch)
@@ -344,6 +425,9 @@ def create_pull_request(branch: str, body: str, cwd: Path):
         print(f"{TOKEN_ENV} is not set, so opening the prefilled compare page instead.")
 
     url = compare_url(slug, branch, title, body)
+    if len(url) > 6000:  # browsers and GitHub choke on very long URLs; keep just the link in that case
+        short_body = re.search(r"\*\*Problem:\*\* (\S+)", body)
+        url = compare_url(slug, branch, title, short_body.group(1) if short_body else "")
     print(f"Create the PR here: {url}")
     webbrowser.open(url)
 
@@ -378,7 +462,7 @@ def main():
 
     commit_and_push(branch, file_path)
     print(f"Branch '{branch}' pushed.")
-    create_pull_request(branch, body=args.url, cwd=file_path.parent)
+    create_pull_request(branch, body=pr_body(title, args.url, left, file_path), cwd=file_path.parent)
 
 
 if __name__ == "__main__":
