@@ -75,7 +75,7 @@ from utils.tree import TreeNode, build_tree
 #         self.right = right
 
 class Solution:
-    def max_depth(self, root: Optional[TreeNode]) -> int:
+    def using_tuples(self, root: Optional[TreeNode]) -> int:
         st = [(root, 1)] if root else [] # stack for dfs
         visited = set()
         max_d = 0
@@ -99,6 +99,27 @@ class Solution:
 
 
         return max_d
+
+
+    def using_recursion(self, root: Optional[TreeNode]) -> int:
+        def depth(node, dep):
+            if not node.left and not node.right:
+                return dep
+            
+            max_l = depth(node.left, dep+1) if node.left else dep
+            max_r = depth(node.right, dep+1) if node.right else dep
+            return max(max_l, max_r)
+        
+        if not root:
+            return 0
+        return depth(root, 1)
+
+
+
+    def max_depth(self, root: Optional[TreeNode]) -> int:
+        # return self.using_tuples(root)
+        return self.using_recursion(root)
+        
 
 
 sol = Solution()
