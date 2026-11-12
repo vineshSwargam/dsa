@@ -73,8 +73,10 @@
 # Acceptance Rate
 # 72.6%
 
+from typing import Optional
+from utils.tree import TreeNode, build_tree
 
-# Definition for a binary tree node.
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -82,13 +84,84 @@
 #         self.right = right
 
 class Solution:
+    def using_bottom_up_recursion(self, root: Optional[TreeNode]) -> int:
+        best = 0
+        def depth(node):
+            if not node:
+                return 0
+
+            nonlocal best
+            left = depth(node.left)
+            right = depth(node.right)
+            best = max(left+right, best)
+
+            return 1 + max(left, right)
+        
+
+        depth(root)
+        return best
+
+    # I didn't write this. It was copied
+    def using_iterative_dfs(self, root: Optional[TreeNode]) -> int:
+        stack = [root]
+        mp = {None: (0, 0)}
+
+        while stack:
+            node = stack[-1]
+
+            if node.left and node.left not in mp:
+                stack.append(node.left)
+            elif node.right and node.right not in mp:
+                stack.append(node.right)
+            else:
+                node = stack.pop()
+
+                leftHeight, leftDiameter = mp[node.left]
+                rightHeight, rightDiameter = mp[node.right]
+
+                mp[node] = (1 + max(leftHeight, rightHeight),
+                           max(leftHeight + rightHeight, leftDiameter, rightDiameter))
+
+        return mp[root][1]
+
+
     def diameter_of_binary_tree(self, root: Optional[TreeNode]) -> int:
+        return self.using_bottom_up_recursion(root)
 
 
 sol = Solution()
-root = [1,null,2,3,4,5] # Output 3
-# root = [1,2,3] # Output 2
 
+# run from the repo root: python3 -m Trees.diameter_of_binary_tree
+# (input, expected) - input is in LeetCode level-order form, None means "no node here"
+# expected is the number of EDGES on the longest path between any two nodes
+left_chain_100 = [0] + [x for v in range(1, 100) for x in (v, None)]   # 0 -> 1 -> 2 ... all left children
+right_chain_100 = [0] + [x for v in range(1, 100) for x in (None, v)]  # same chain, all right children
 
+tests = [
+    ([1,None,2,3,4,5], 3),                          # example 1, longest path (5-3-2-4) skips the root
+    ([1,2,3], 2),                                   # example 2, path bends at the root (2-1-3)
+    ([1], 0),                                       # single node, no edges
+    ([1,2], 1),                                     # two nodes
+    ([1,None,2], 1),                                # two nodes, right side
+    ([1,2,3,4,5], 3),                               # 4-2-1-3
+    ([1,2,3,4,None,None,None,5], 4),                # deep left side plus the right child: 5-4-2-1-3
+    ([1,2,3,4,5,6,7], 4),                           # perfect tree, leaf to leaf through the root
+    ([1,2,None,3,4,5,None,None,6,7,None,None,8], 6),# longest path (7-5-3-2-4-6-8) is all under 2, root is off to the side
+    ([1,2,None,None,3,None,4], 3),                  # zigzag chain, the path is the whole chain
+    ([5,5,5,5,5], 3),                               # all values equal
+    ([-100,-100,100], 2),                           # negatives and value limits
+    (list(range(63)), 10),                          # perfect tree, 63 nodes, 5 edges down each side
+    (list(range(100)), 12),                         # complete tree, 100 nodes (max size)
+    (left_chain_100, 99),                           # 100 nodes, all left, path is the whole chain
+    (right_chain_100, 99),                          # 100 nodes, all right
+]
 
-print(sol.diameter_of_binary_tree(root))
+passed = 0
+for vals, expected in tests:
+    got = sol.diameter_of_binary_tree(build_tree(vals))
+    status = "PASS" if got == expected else "FAIL"
+    passed += got == expected
+    shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
+    print(f"{status}  {shown} -> {got}  expected {expected}")
+
+print(f"{passed}/{len(tests)} passed")
