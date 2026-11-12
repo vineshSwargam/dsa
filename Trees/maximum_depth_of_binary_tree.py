@@ -120,7 +120,7 @@ class Solution:
         def depth(node):
             if not node:
                 return 0
-            return max(1+depth(node.left), 1+depth(node.right))
+            return 1 + max(depth(node.left), depth(node.right))
         
         return depth(root)
 
