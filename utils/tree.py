@@ -50,3 +50,27 @@ def to_list(root):
     while out and out[-1] is None:
         out.pop()
     return out
+
+
+def find_node(root, val):
+    """Returns the node holding val (the first one found), or None. For problems that pass nodes, not values."""
+    st = [root]
+    while st:
+        node = st.pop()
+        if node is None:
+            continue
+        if node.val == val:
+            return node
+        st.append(node.left)
+        st.append(node.right)
+    return None
+
+
+def bst_level_order(sorted_vals):
+    """Sorted values -> a height-balanced BST, returned in LeetCode level-order form (feed it to build_tree)."""
+    def build(lo, hi):
+        if lo > hi:
+            return None
+        mid = (lo + hi) // 2
+        return TreeNode(sorted_vals[mid], build(lo, mid - 1), build(mid + 1, hi))
+    return to_list(build(0, len(sorted_vals) - 1))

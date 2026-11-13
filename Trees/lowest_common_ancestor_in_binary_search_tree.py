@@ -82,7 +82,10 @@
 # 73.8%
 
 
-# Definition for a binary tree node.
+from typing import Optional
+from utils.tree import TreeNode, build_tree, find_node, bst_level_order
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -94,9 +97,55 @@ class Solution:
 
 
 sol = Solution()
-root, p, q = [5,3,8,1,4,7,9,null,2], 3, 8 # Output 5
-# root, p, q = [5,3,8,1,4,7,9,null,2], 3, 4 # Output 3
 
+# run from the repo root: python3 -m Trees.lowest_common_ancestor_in_binary_search_tree
+# (root, p, q, expected) - root in LeetCode level-order form; p, q and expected are node VALUES
+# p and q are looked up as real nodes in the tree before calling, the way LeetCode passes them,
+# and the answer must be the actual node from the tree (checked with "is"), not just a node with the right value
+ex = [5,3,8,1,4,7,9,None,2]
+#          5
+#        /   \
+#       3     8
+#      / \   / \
+#     1   4 7   9
+#      \
+#       2
+balanced_1_to_100 = bst_level_order(list(range(1, 101)))                  # 100 nodes, height 7, root is 50
+desc_left_chain = [100] + [x for v in range(99, 0, -1) for x in (v, None)] # 100 -> 99 -> ... -> 1, all left children
+asc_right_chain = [1] + [x for v in range(2, 101) for x in (None, v)]      # 1 -> 2 -> ... -> 100, all right children
 
+tests = [
+    (ex, 3, 8, 5),                          # example 1, split at the root
+    (ex, 3, 4, 3),                          # example 2, p is the ancestor of q
+    (ex, 8, 3, 5),                          # example 1 with p and q swapped
+    (ex, 4, 3, 3),                          # example 2 with p and q swapped
+    (ex, 2, 4, 3),                          # split one level down, on the left
+    (ex, 7, 9, 8),                          # split one level down, on the right
+    (ex, 1, 2, 1),                          # q is p's direct child
+    (ex, 2, 9, 5),                          # deepest left node vs a right leaf
+    (ex, 5, 2, 5),                          # p is the root itself
+    (ex, 2, 3, 3),                          # deep node and its grandparent
+    ([2,1], 2, 1, 2),                       # two nodes, root and left child
+    ([1,None,2], 1, 2, 1),                  # two nodes, root and right child
+    ([0,-100,100], -100, 100, 0),           # value limits, split at the root
+    ([-50,-100,0,None,None,-25,100], -25, 100, 0),   # all negatives on one side, split below the root
+    (balanced_1_to_100, 1, 100, 50),        # smallest and largest, split at the root
+    (balanced_1_to_100, 24, 26, 25),        # neighbours that split at 25
+    (balanced_1_to_100, 99, 100, 99),       # neighbours where one is the parent
+    (balanced_1_to_100, 37, 38, 37),        # neighbours deep in the tree
+    (desc_left_chain, 1, 2, 2),             # 100-deep left chain, answer at the very bottom
+    (desc_left_chain, 1, 100, 100),         # left chain, answer is the root
+    (asc_right_chain, 99, 100, 99),         # 100-deep right chain, answer near the bottom
+    (asc_right_chain, 50, 51, 50),          # right chain, answer in the middle
+]
 
-print(sol.lowest_common_ancestor(root, p, q))
+passed = 0
+for vals, p_val, q_val, expected in tests:
+    root = build_tree(vals)
+    got = sol.lowest_common_ancestor(root, find_node(root, p_val), find_node(root, q_val))
+    ok = got is find_node(root, expected)
+    passed += ok
+    shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
+    print(f"{'PASS' if ok else 'FAIL'}  {shown} p={p_val} q={q_val} -> {got.val if got else None}  expected {expected}")
+
+print(f"{passed}/{len(tests)} passed")
