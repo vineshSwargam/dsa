@@ -84,7 +84,68 @@ from utils.tree import TreeNode, build_tree
 #         self.right = right
 
 class Solution:
+
+    def using_recursive_dfs(self, root: Optional[TreeNode], subRoot: Optional[TreeNode]) -> bool:
+        def check_same(a, b):
+            if not a and not b:
+                return True
+
+            if not a or not b or a.val != b.val:
+                return False
+            
+            return check_same(a.left, b.left) and check_same(a.right, b.right)
+        
+        def check_sub(a, b):
+            if not a:
+                return False
+            if check_same(a, b):
+                return True
+            return check_sub(a.left, b) or check_sub(a.right, b)
+
+        return check_sub(root, subRoot)
+
+            
+
+    
+    
+    def using_iterative_dfs(self, root: Optional[TreeNode], subRoot: Optional[TreeNode]) -> bool:
+        def check_same(p, q):
+            st = [(p, q)] # stack
+
+            while st:
+                a, b = st.pop()
+
+                if not a and not b:
+                    continue
+
+                if not a or not b or a.val != b.val:
+                    # print('Val not matching')
+                    return False
+
+                st.append((a.left, b.left))
+                st.append((a.right, b.right))
+
+            return True
+
+        mst = [root] if root else []
+        
+        while mst:
+            node = mst.pop()
+            if node and node.left:
+                mst.append(node.left)
+            if node and node.right:
+                mst.append(node.right)
+
+            if check_same(node, subRoot):
+                return True
+            
+        return False
+
+
+
     def is_subtree(self, root: Optional[TreeNode], subRoot: Optional[TreeNode]) -> bool:
+        # return self.using_recursive_dfs(root, subRoot)
+        return self.using_iterative_dfs(root, subRoot)
 
 
 sol = Solution()
