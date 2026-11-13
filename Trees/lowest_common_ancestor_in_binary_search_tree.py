@@ -93,7 +93,75 @@ from utils.tree import TreeNode, build_tree, find_node, bst_level_order
 #         self.right = right
 
 class Solution:
+    def using_recursive_dfs(self, root, p, q):
+        # this is not using the advantage of the tree being a Binary Search Tree
+        def find_lca(r, a, b):
+            # track what is found
+            # let left run out until both are found
+            # let right run out until both are found
+            # when both found, curr r is the lca
+            if not r:
+                return None
+            if (a and r.val == a.val) or (b and r.val == b.val):
+                return r
+
+            f1 = find_lca(r.left, a, b)
+            f2 = None
+            if f1 != None:
+                if f1 == a:
+                    f2 = find_lca(r.right, None, b)
+                if f1 == b:
+                    f2 = find_lca(r.right, a, None)
+            else:
+                f2 = find_lca(r.right, a, b)
+
+            if f1 != None and f2 != None:
+                return r
+            elif f1 != None:
+                return f1
+            return f2
+
+        return find_lca(root, p, q)
+
+    def using_recursive_binary_dfs(self, root, p, q):
+        def find_lca(r, a, b):
+            # track what is found
+            # let left run out until both are found
+            # let right run out until both are found
+            # when both found, curr r is the lca
+            if not r:
+                return None
+
+            if a.val < r.val and b.val < r.val:
+                f1 = find_lca(r.left, a, b)
+            elif a.val > r.val and b.val > r.val:
+                f1 = find_lca(r.right, a, b)
+            else:
+                f1 = r
+            
+            return f1
+            
+
+        return find_lca(root, p, q)
+
+    def using_iterative_dfs(self, root, p, q):
+        def dfs(r, a, b):
+            st = [r] if r else []
+
+            while st:
+                node = st.pop()
+                if a.val < node.val and b.val < node.val:
+                    st.append(node.left)
+                elif a.val > node.val and b.val > node.val:
+                    st.append(node.right)
+                else:
+                    return node
+        return dfs(root, p, q)
+
     def lowest_common_ancestor(self, root: TreeNode, p: TreeNode, q: TreeNode) -> TreeNode:
+        # return self.using_recursive_dfs(root, p, q)
+        # return self.using_recursive_binary_dfs(root, p, q)
+        return self.using_iterative_dfs(root, p, q)
 
 
 sol = Solution()
