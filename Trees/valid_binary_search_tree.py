@@ -70,7 +70,10 @@
 # 43.6%
 
 
-# Definition for a binary tree node.
+from typing import Optional
+from utils.tree import TreeNode, build_tree, bst_level_order
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -82,9 +85,51 @@ class Solution:
 
 
 sol = Solution()
-root = [2,1,3] # Output true
-# root = [1,2,3] # Output false
 
+# run from the repo root: python3 -m Trees.valid_binary_search_tree
+# (root, expected) - root in LeetCode level-order form
+N = 10000
+balanced_valid = bst_level_order(list(range(1, N + 1)))                     # 10k nodes, height 14, valid
+swapped = list(range(1, N + 1)); swapped[5000], swapped[5001] = swapped[5001], swapped[5000]
+balanced_one_swap = bst_level_order(swapped)                                # same shape, two neighbouring values swapped deep inside
+asc_right_chain = [1] + [x for v in range(2, N + 1) for x in (None, v)]     # 1 -> 2 -> ... -> 10000, all right children, valid
+desc_left_chain = [N] + [x for v in range(N - 1, 0, -1) for x in (v, None)] # 10000 -> ... -> 1, all left children, valid
+asc_right_chain_bad_end = asc_right_chain[:-1] + [0]                        # same right chain, but the very last node is 0
 
+tests = [
+    ([2,1,3], True),                                # example 1
+    ([1,2,3], False),                               # example 2, left child bigger than the root
+    ([1], True),                                    # single node
+    ([1,1], False),                                 # duplicate on the left, must be strictly less
+    ([1,None,1], False),                            # duplicate on the right, must be strictly greater
+    ([2,2,2], False),                               # all duplicates
+    ([5,1,4,None,None,3,6], False),                 # right child smaller than the root
+    ([5,4,6,None,None,3,7], False),                 # 3 is fine under its parent 6, but it is in 5's right subtree
+    ([10,5,15,None,None,6,20], False),              # same trap: 6 < 15 but 6 < 10 too
+    ([3,1,5,0,4], False),                           # mirror trap: 4 > 1 but it is in 3's left subtree
+    ([32,26,47,19,None,None,56,None,27], False),    # 27 > 19 but it is in 26's left subtree
+    ([3,1,5,0,2,4,6], True),                        # full valid tree
+    ([5,3,8,1,4,7,9,None,2], True),                 # valid with a deep inner node (2 sits between 1 and 3)
+    ([2,1,3,None,None,None,4], True),               # valid, one-sided deeper level
+    ([0,-1000000000,1000000000], True),             # value limits: a fake -1e9 / 1e9 starting bound would break this
+    ([1000000000,-1000000000], True),               # root at the max limit
+    ([-1000000000,None,1000000000], True),          # root at the min limit
+    (balanced_valid, True),                         # max size, valid
+    (balanced_one_swap, False),                     # max size, one hidden swap
+    (asc_right_chain, True),                        # 10k deep right chain, too deep for plain recursion
+    (desc_left_chain, True),                        # 10k deep left chain
+    (asc_right_chain_bad_end, False),               # 10k deep, broken only at the very bottom
+]
 
-print(sol.is_valid_bst(root))
+passed = 0
+for vals, expected in tests:
+    try:
+        got = sol.is_valid_bst(build_tree(vals))
+    except RecursionError:
+        got = 'ERROR (too deep for recursion)'
+    ok = got == expected
+    passed += ok
+    shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
+    print(f"{'PASS' if ok else 'FAIL'}  {shown} -> {got}  expected {expected}")
+
+print(f"{passed}/{len(tests)} passed")
