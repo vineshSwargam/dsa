@@ -81,7 +81,42 @@ from utils.tree import TreeNode, build_tree, bst_level_order
 #         self.right = right
 
 class Solution:
+    def using_recursive_dfs(self, root):
+        def dfs(r, lb, ub):
+            if r and (r.val <= lb or r.val >= ub):
+                return False
+            
+            left_valid = dfs(r.left, lb, r.val) if r.left else True
+            right_valid = dfs(r.right, r.val, ub) if r.right else True
+
+            return left_valid and right_valid
+
+        return dfs(root, float('-inf'), float('inf'))
+
+
+    def using_iterative_dfs(self, root):
+        def dfs(r):
+            st = [(r, float('-inf'), float('inf'))] if r else []
+            # 5, 4, 6, None, None, 3, 7
+            while st:
+                node, lb, ub = st.pop() # lb, ub is lower bound upper bound
+
+                if node and (node.val <= lb or node.val >= ub):
+                    return False
+                
+                if node.left:
+                    st.append((node.left, lb, node.val)) 
+                if node.right:
+                    st.append((node.right, node.val, ub)) 
+
+            return True
+        
+        return dfs(root)
+
+
     def is_valid_bst(self, root: Optional[TreeNode]) -> bool:
+        # return self.using_iterative_dfs(root)
+        return self.using_recursive_dfs(root)
 
 
 sol = Solution()
