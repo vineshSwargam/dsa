@@ -77,7 +77,67 @@ from utils.tree import TreeNode, build_tree
 #         self.right = right
 
 class Solution:
+    def using_recursive_dfs(self, root):
+        res = 0
+        if not root:
+            return res
+
+        def dfs(r, lkmv):
+            nonlocal res
+            if r.val >= lkmv:
+                lkmv = r.val
+                res += 1
+            if r.left:
+                dfs(r.left, lkmv)
+            if r.right:
+                dfs(r.right, lkmv)
+
+        dfs(root, root.val)
+        return res
+
+    def using_improved_recursive_dfs(self, root):
+        def dfs(r, lkmv):
+            res = 0
+            if not r:
+                return res
+            
+            if r.val >= lkmv:
+                lkmv = r.val
+                res += 1
+
+            res += dfs(r.left, lkmv)
+            res += dfs(r.right, lkmv)
+            return res
+
+        return dfs(root, root.val)
+
+
+    def using_iterative_dfs(self, root):
+        def dfs(r):
+            st = [(r, r.val)] if r else []
+            res = 0
+
+            while st:
+                node, lkmv = st.pop() # lkmv is last known max value
+                
+                if node.val >= lkmv:
+                    lkmv = node.val
+                    res += 1
+
+                if node.left:
+                    st.append((node.left, lkmv))
+                if node.right:
+                    st.append((node.right, lkmv))
+
+            return res
+
+        
+        return dfs(root)
+
     def good_nodes(self, root: TreeNode) -> int:
+        # return self.using_iterative_dfs(root)
+        # return self.using_recursive_dfs(root)
+        return self.using_improved_recursive_dfs(root)
 
 
 sol = Solution()
