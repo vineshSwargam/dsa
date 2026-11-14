@@ -67,7 +67,9 @@
 # 73.9%
 
 
-# Definition for a binary tree node.
+from utils.tree import TreeNode, build_tree
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -79,9 +81,46 @@ class Solution:
 
 
 sol = Solution()
-root = [2,1,1,3,null,1,5] # Output 3
-# root = [1,2,-1,3,4] # Output 4
 
+# run from the repo root: python3 -m Trees.count_good_nodes_in_binary_tree
+# (root, expected) - root in LeetCode level-order form
+N = 100000
+depth = lambda i: (i + 1).bit_length() - 1                              # depth of the node at level-order index i
+complete_rising = [depth(i) for i in range(N)]                          # 100k nodes, each level bigger than the last, all good
+complete_falling = [-depth(i) for i in range(N)]                        # 100k nodes, each level smaller, only the root is good
+left_chain_zeros = [0] + [x for _ in range(N - 1) for x in (0, None)]   # 100k-deep left chain of equal values, all good
+right_chain_zigzag = [100] + [x for i in range(1, N) for x in (None, -100 if i % 2 else 100)]   # 100, -100, 100, ... only the 100s are good
 
+tests = [
+    ([2,1,1,3,None,1,5], 3),                # example 1
+    ([1,2,-1,3,4], 4),                      # example 2
+    ([1], 1),                               # single node, root is always good
+    ([5,5,5], 3),                           # equal to the max still counts as good
+    ([3,1,4], 2),                           # smaller child is bad, bigger child is good
+    ([3,3,None,4,2], 3),                    # equal, then bigger, then smaller
+    ([5,1,10,None,None,7,12], 3),           # 7 beats its grandparent 5 but not its parent 10, so it's bad
+    ([2,None,1,None,3], 2),                 # path dips then recovers: 2 good, 1 bad, 3 good
+    ([5,4,8,9,1,7,10], 4),                  # 9 is good on the left even though 8 is bigger on the right branch
+    ([1,2,3,4,5,6,7], 7),                   # every level bigger, all good
+    ([7,6,5,4,3,2,1], 1),                   # every level smaller, only the root
+    ([-100,-100,-100], 3),                  # all at the lower limit
+    ([100,-100,-100,100], 2),               # root at the upper limit, nothing beats it except an equal
+    ([0,-1,1], 2),                          # zero and negatives
+    (complete_rising, N),                   # max size, all good
+    (complete_falling, 1),                  # max size, only the root
+    (left_chain_zeros, N),                  # 100k deep, too deep for plain recursion
+    (right_chain_zigzag, N // 2),           # 100k deep, half the nodes good
+]
 
-print(sol.good_nodes(root))
+passed = 0
+for vals, expected in tests:
+    try:
+        got = sol.good_nodes(build_tree(vals))
+    except RecursionError:
+        got = 'ERROR (too deep for recursion)'
+    ok = got == expected
+    passed += ok
+    shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
+    print(f"{'PASS' if ok else 'FAIL'}  {shown} -> {got}  expected {expected}")
+
+print(f"{passed}/{len(tests)} passed")
