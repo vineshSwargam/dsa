@@ -109,6 +109,26 @@ class Solution:
         
         return bfs()
 
+    def using_recursive_dfs(self, root):
+        if not root:
+            return []
+        
+        res = []
+
+        def dfs(r, d):
+            if len(res) < d:
+                res.append(r.val)
+            else:
+                res[d-1] = r.val
+            if r.left:
+                dfs(r.left, d+1)
+            if r.right:
+                dfs(r.right, d+1)
+            
+            return res
+        
+        return dfs(root, 1)
+
 
     def using_iter_bfs(self, root):
         def bfs(r):
@@ -131,7 +151,8 @@ class Solution:
 
     def right_side_view(self, root: Optional[TreeNode]) -> List[int]:
         # return self.using_iter_bfs(root)
-        return self.using_recursive_bfs(root)
+        # return self.using_recursive_bfs(root)
+        return self.using_recursive_dfs(root)
 
 
 sol = Solution()
