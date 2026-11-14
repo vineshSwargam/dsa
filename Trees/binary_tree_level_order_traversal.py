@@ -127,23 +127,23 @@ class Solution:
         return bfs(root)
 
 
-    def using_recursive_bfs(self, root: Optional[TreeNode]) -> List[List[int]]:
+    def using_recursive_dfs(self, root: Optional[TreeNode]) -> List[List[int]]:
         res = []
-        def bfs(r, d):
+        def dfs(r, d):
             if len(res) < d:
                 res.append([r.val])
             else:
                 res[d-1].append(r.val)
             
             if r.left:
-                bfs(r.left, d+1)
+                dfs(r.left, d+1)
             if r.right:
-                bfs(r.right, d+1)
+                dfs(r.right, d+1)
         
         if not root:
             return []
         
-        bfs(root, 1)
+        dfs(root, 1)
         return res
 
             
