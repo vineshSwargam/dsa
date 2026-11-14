@@ -71,22 +71,130 @@
 # 80.4%
 
 
-# Definition for a binary tree node.
+from typing import List, Optional
+from utils.tree import TreeNode, build_tree
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
 #         self.left = left
 #         self.right = right
 
+from collections import deque
+
 class Solution:
+    def using_iterative_bfs(self, root):
+        def bfs(r):
+            q = deque([(r, 1)]) if r else []
+            res = []
+
+            while q:
+                node, dep = q.popleft()
+                if len(res) < dep:
+                    res.append([node.val])
+                else:
+                    res[dep-1].append(node.val)
+                
+                if node.left:
+                    q.append((node.left, dep+1))
+                if node.right:
+                    q.append((node.right, dep+1))
+            
+            return res
+        
+        return bfs(root)
+
+    # without depth tuples
+    def using_improved_iterative_bfs(self, root):
+        def bfs(r):
+            q = deque([r]) if r else []
+            res = []
+
+            while q:
+                nlist = []
+                for _ in range(len(q)):
+                    node = q.popleft()
+                    nlist.append(node.val)
+                    if node.left:
+                        q.append(node.left)
+                    if node.right:
+                        q.append(node.right)
+                res.append(nlist)
+            
+            return res
+        
+        return bfs(root)
+
+
+    def using_recursive_bfs(self, root: Optional[TreeNode]) -> List[List[int]]:
+        res = []
+        def bfs(r, d):
+            if len(res) < d:
+                res.append([r.val])
+            else:
+                res[d-1].append(r.val)
+            
+            if r.left:
+                bfs(r.left, d+1)
+            if r.right:
+                bfs(r.right, d+1)
+        
+        if not root:
+            return []
+        
+        bfs(root, 1)
+        return res
+
+            
+
     def level_order(self, root: Optional[TreeNode]) -> List[List[int]]:
+        # return self.using_recursive_bfs(root)
+        # return self.using_iterative_bfs(root)
+        return self.using_improved_iterative_bfs(root)
 
 
 sol = Solution()
-root = [1,2,3,4,5,6,7] # Output [[1],[2,3],[4,5,6,7]]
-# root = [1] # Output [[1]]
-# root = [] # Output []
 
+# run from the repo root: python3 -m Trees.binary_tree_level_order_traversal
+# (root, expected) - root in LeetCode level-order form
+complete_2000 = list(range(1, 2001))                                    # 2000 nodes, every level full except the last
+complete_2000_levels = [complete_2000[2**d - 1 : 2**(d + 1) - 1] for d in range(11)]   # [1], [2,3], [4..7], ... [1024..2000]
+left_chain_2000 = [1] + [x for v in range(2, 2001) for x in (v, None)]  # 1 -> 2 -> ... -> 2000, all left children
+right_chain_2000 = [1] + [x for v in range(2, 2001) for x in (None, v)] # 1 -> 2 -> ... -> 2000, all right children
+one_per_level_2000 = [[v] for v in range(1, 2001)]
 
+tests = [
+    ([1,2,3,4,5,6,7], [[1],[2,3],[4,5,6,7]]),          # example 1, full tree
+    ([1], [[1]]),                                       # example 2, single node
+    ([], []),                                           # example 3, empty tree
+    ([1,2], [[1],[2]]),                                 # only a left child
+    ([1,None,2], [[1],[2]]),                            # only a right child
+    ([3,9,20,None,None,15,7], [[3],[9,20],[15,7]]),     # left side ends early
+    ([1,2,3,4,None,None,5], [[1],[2,3],[4,5]]),         # gap in the middle of a level
+    ([1,2,3,None,4,5], [[1],[2,3],[4,5]]),              # children on the inner sides
+    ([1,2,3,4,None,None,5,6,None,None,7], [[1],[2,3],[4,5],[6,7]]),   # two separate deep branches
+    ([1,2,None,None,3,4], [[1],[2],[3],[4]]),           # zigzag: left, right, left
+    ([1,2,3,4,5,6,7,8], [[1],[2,3],[4,5,6,7],[8]]),     # last level has a single node
+    ([5,5,5,5,5], [[5],[5,5],[5,5]]),                   # duplicate values
+    ([0,-1000,1000,-1000,-1000], [[0],[-1000,1000],[-1000,-1000]]),   # value limits and zero
+    ([-1,-2,-3], [[-1],[-2,-3]]),                       # all negatives, order is left to right not by value
+    ([1,3,2], [[1],[3,2]]),                             # not sorted, keep tree order
+    (complete_2000, complete_2000_levels),              # max size, 11 levels
+    (left_chain_2000, one_per_level_2000),              # 2000-deep left chain
+    (right_chain_2000, one_per_level_2000),             # 2000-deep right chain
+]
 
-print(sol.level_order(root))
+passed = 0
+for vals, expected in tests:
+    try:
+        got = sol.level_order(build_tree(vals))
+    except RecursionError:
+        got = 'ERROR (too deep for recursion)'
+    ok = got == expected
+    passed += ok
+    shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
+    got_shown = got if len(str(got)) <= 80 else f"[{len(got)} levels]"
+    print(f"{'PASS' if ok else 'FAIL'}  {shown} -> {got_shown}")
+
+print(f"{passed}/{len(tests)} passed")
