@@ -127,7 +127,7 @@ class Solution:
         return bfs(root)
 
 
-    def using_recursive_bfs(self, root: Optional[TreeNode]) -> List[List[int]]:
+    def using_recursive_dfs(self, root: Optional[TreeNode]) -> List[List[int]]:
         res = []
         def bfs(r, d):
             if len(res) < d:
@@ -143,7 +143,7 @@ class Solution:
         if not root:
             return []
         
-        bfs(root, 1)
+        dfs(root, 1)
         return res
 
             

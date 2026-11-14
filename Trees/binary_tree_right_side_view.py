@@ -88,6 +88,28 @@ from typing import List, Optional
 from utils.tree import TreeNode, build_tree
 
 class Solution:
+    def using_recursive_bfs(self, root):
+        q = deque([root]) if root else []
+        res = []
+
+        def bfs():
+            node = None
+            for _ in range(len(q)):
+                node = q.popleft()
+                if node.left:
+                    q.append(node.left)
+                if node.right:
+                    q.append(node.right)
+            if node:
+                res.append(node.val)
+                return bfs()
+            
+            return res
+
+        
+        return bfs()
+
+
     def using_iter_bfs(self, root):
         def bfs(r):
             q = deque([r]) if r else []
@@ -108,7 +130,8 @@ class Solution:
         return bfs(root)
 
     def right_side_view(self, root: Optional[TreeNode]) -> List[int]:
-        return self.using_iter_bfs(root)
+        # return self.using_iter_bfs(root)
+        return self.using_recursive_bfs(root)
 
 
 sol = Solution()
