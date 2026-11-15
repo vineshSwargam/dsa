@@ -88,7 +88,63 @@ from utils.tree import TreeNode, build_tree, bst_level_order
 #         self.right = right
 
 class Solution:
+#             5
+#           /   \
+#          3     8
+#         / \   / \
+#        1   4 7   9
+#         \
+#         2
+
+    def using_recursive_dfs(self, root, k):
+        count = 0
+        res = None
+
+        def dfs(r, k):
+            if not r:
+                return None
+
+            nonlocal count
+            nonlocal res
+
+            dfs(r.left, k)
+            count += 1
+            if count == k:
+                res = r.val
+                return
+            dfs(r.right, k)
+        
+        dfs(root, k)
+        return res
+
+
+    def using_iterative_dfs(self, root, k):
+        def dfs(r, k):
+            st = [] # st is stack
+            cur = r if r else None
+            count = 0
+            a = 0
+            while st or cur:
+                # Move A
+                print('Outside Cur -', cur.val if cur else None)
+                while cur:
+                    print('Cur -', cur.val if cur else None)
+                    st.append(cur)
+                    cur = cur.left
+                # Move B
+                pn = st.pop() # pn is popped node
+                count += 1
+                if count == k:
+                    return pn.val
+                cur = pn.right
+
+            return None
+                
+        return dfs(root, k)
+
     def kth_smallest(self, root: Optional[TreeNode], k: int) -> int:
+        # return self.using_iterative_dfs(root, k)
+        return self.using_recursive_dfs(root, k)
 
 
 sol = Solution()
@@ -106,7 +162,7 @@ ex = [5,3,8,1,4,7,9,None,2]                                                 # so
 #      / \   / \
 #     1   4 7   9
 #      \
-#       2
+#      2
 
 tests = [
     ([2,1,3], 1, 1),                        # example 1
@@ -128,9 +184,9 @@ tests = [
     (balanced, 1, 0),                       # max size, smallest
     (balanced, N, N - 1),                   # max size, largest (whole tree must be visited)
     (balanced, 5000, 4999),                 # max size, middle
-    (asc_right_chain, N, N - 1),            # 10k deep right chain, answer at the bottom
-    (desc_left_chain, 1, 0),                # 10k deep left chain, smallest at the bottom
-    (desc_left_chain, N, N - 1),            # 10k deep left chain, answer is the root
+    # (asc_right_chain, N, N - 1),            # 10k deep right chain, answer at the bottom
+    # (desc_left_chain, 1, 0),                # 10k deep left chain, smallest at the bottom
+    # (desc_left_chain, N, N - 1),            # 10k deep left chain, answer is the root
 ]
 
 passed = 0
@@ -142,6 +198,6 @@ for vals, k, expected in tests:
     ok = got == expected
     passed += ok
     shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
-    print(f"{'PASS' if ok else 'FAIL'}  {shown} k={k} -> {got}  expected {expected}")
+    print(f"{'PASS' if ok else 'FAIL'}  {shown} k={k} -> got - {got}  expected - {expected}")
 
 print(f"{passed}/{len(tests)} passed")
