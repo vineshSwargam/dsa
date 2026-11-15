@@ -74,3 +74,29 @@ def bst_level_order(sorted_vals):
         mid = (lo + hi) // 2
         return TreeNode(sorted_vals[mid], build(lo, mid - 1), build(mid + 1, hi))
     return to_list(build(0, len(sorted_vals) - 1))
+
+
+def preorder_vals(root):
+    """Tree -> values in pre-order (node, left, right). Iterative, so deep trees are fine."""
+    out, st = [], [root] if root else []
+    while st:
+        node = st.pop()
+        out.append(node.val)
+        if node.right:
+            st.append(node.right)
+        if node.left:
+            st.append(node.left)
+    return out
+
+
+def inorder_vals(root):
+    """Tree -> values in in-order (left, node, right). Iterative, so deep trees are fine."""
+    out, st, cur = [], [], root
+    while st or cur:
+        while cur:
+            st.append(cur)
+            cur = cur.left
+        cur = st.pop()
+        out.append(cur.val)
+        cur = cur.right
+    return out
