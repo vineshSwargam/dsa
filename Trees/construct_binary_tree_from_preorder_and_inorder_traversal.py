@@ -98,7 +98,6 @@ from utils.tree import build_tree as make_tree   # renamed so it doesn't get mix
 class Solution:
     def using_recur_dfs(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
         pre_ind = 0
-        pre_len = len(preorder)
         in_len = len(inorder)
         pre_in_map = {}
         for i, val in enumerate(inorder):
@@ -110,7 +109,7 @@ class Solution:
             # iu is inorder's upper bound
             nonlocal pre_ind
 
-            if pre_ind==pre_len or il>iu:
+            if il>iu:
                 return None 
 
             root_val = preorder[pre_ind]
