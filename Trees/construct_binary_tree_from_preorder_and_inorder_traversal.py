@@ -84,7 +84,11 @@
 # 71.0%
 
 
-# Definition for a binary tree node.
+from typing import List, Optional
+from utils.tree import TreeNode, to_list, preorder_vals, inorder_vals
+from utils.tree import build_tree as make_tree   # renamed so it doesn't get mixed up with Solution.build_tree
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -92,13 +96,79 @@
 #         self.right = right
 
 class Solution:
+    def using_recur_dfs(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        def dfs(pre, ino):
+            # print('pre- ', pre)
+            # print('ino- ', ino)
+            if not pre or not ino:
+                return None 
+            root_val = pre.pop(0)
+            # print('root_val- ', root_val)
+            root_ind = ino.index(root_val)
+            # print('root_ind- ', root_ind)
+            left_ino = ino[0:root_ind]
+            # print('left_ino- ', left_ino)
+            right_ino = ino[root_ind+1:]
+            # print('right_ino- ', right_ino)
+            root = TreeNode(root_val)
+            left_pre = pre[0:len(left_ino)]
+            # print('left_pre- ', left_pre)
+            right_pre = pre[len(left_ino):]
+            # print('right_pre- ', right_pre)
+
+            root.left = dfs(left_pre, left_ino)
+            root.right = dfs(right_pre, right_ino)
+            return root
+                
+        
+        return dfs(preorder, inorder)
+    
     def build_tree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        return self.using_recur_dfs(preorder, inorder)
 
 
 sol = Solution()
-preorder, inorder = [1,2,3,4], [2,1,3,4] # Output [1,2,3,null,null,null,4]
-# preorder, inorder = [1], [1] # Output [1]
 
+# run from the repo root: python3 -m Trees.construct_binary_tree_from_preorder_and_inorder_traversal
+# (preorder, inorder, expected) - expected is the tree in LeetCode level-order form
+# the big cases build a tree first and read its preorder / inorder off it
+def big_case(vals):
+    t = make_tree(vals)
+    return (preorder_vals(t), inorder_vals(t), to_list(t))
 
+complete_2001 = list(range(-1000, 1001))                                    # 2001 nodes, every value allowed, used once
+left_chain_2001 = [0] + [x for v in range(1, 2001) for x in (v, None)]      # 2001-deep left chain
+right_chain_2001 = [0] + [x for v in range(1, 2001) for x in (None, v)]     # 2001-deep right chain
 
-print(sol.build_tree(preorder, inorder))
+tests = [
+    ([1,2,3,4], [2,1,3,4], [1,2,3,None,None,None,4]),          # example 1
+    ([1], [1], [1]),                                            # example 2, single node
+    ([3,9,20,15,7], [9,3,15,20,7], [3,9,20,None,None,15,7]),    # left child is a leaf, right side goes deeper
+    ([1,2], [2,1], [1,2]),                                      # only a left child
+    ([1,2], [1,2], [1,None,2]),                                 # only a right child (same preorder as above!)
+    ([1,2,3], [3,2,1], [1,2,None,3]),                           # left chain
+    ([1,2,3], [1,2,3], [1,None,2,None,3]),                      # right chain
+    ([1,2,3], [2,3,1], [1,2,None,None,3]),                      # zigzag: left, then right
+    ([1,2,4,5,3,6,7], [4,2,5,1,6,3,7], [1,2,3,4,5,6,7]),        # full tree
+    ([1,2,4,3,5], [4,2,1,5,3], [1,2,3,4,None,5]),               # each child has only a left child
+    ([1,2,3,4,5], [2,4,3,5,1], [1,2,None,None,3,4,5]),          # empty left part at node 2
+    ([5,9,1], [9,5,1], [5,9,1]),                                # values are not sorted, it's not a BST
+    ([0,-1000,1000], [-1000,0,1000], [0,-1000,1000]),           # value limits
+    big_case(complete_2001),                                    # max size
+    big_case(left_chain_2001),                                  # 2001 deep, too deep for plain recursion
+    big_case(right_chain_2001),                                 # 2001 deep the other way
+]
+
+passed = 0
+for pre, ino, expected in tests:
+    try:
+        got = to_list(sol.build_tree(pre, ino))
+    except RecursionError:
+        got = 'ERROR (too deep for recursion)'
+    ok = got == expected
+    passed += ok
+    shown = f"pre={pre} in={ino}" if len(pre) <= 10 else f"[{len(pre)} nodes]"
+    got_shown = got if not isinstance(got, list) or len(got) <= 20 else f"[{len(got)} values]"
+    print(f"{'PASS' if ok else 'FAIL'}  {shown} -> {got_shown}")
+
+print(f"{passed}/{len(tests)} passed")
