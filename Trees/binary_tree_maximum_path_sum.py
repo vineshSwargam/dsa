@@ -79,7 +79,10 @@
 # 48.9%
 
 
-# Definition for a binary tree node.
+from typing import Optional
+from utils.tree import TreeNode, build_tree
+
+# Definition for a binary tree node (lives in utils/tree.py):
 # class TreeNode:
 #     def __init__(self, val=0, left=None, right=None):
 #         self.val = val
@@ -87,13 +90,107 @@
 #         self.right = right
 
 class Solution:
+    def __init__(self):
+        pass
+
+    # bottom up recursion
+    def find_max_path_sum(self, root):
+        m_sum = float('-inf')
+
+        def path_sum(r):
+            nonlocal m_sum
+            if not r:
+                return 0
+        
+            left = path_sum(r.left)
+            right = path_sum(r.right)
+            lsum = left if left > 0 else 0
+            rsum = right if right > 0 else 0
+
+            m_sum = max(r.val+lsum+rsum, m_sum)
+
+            return r.val + max(lsum, rsum)
+        
+        # path_sum(root)
+        # return m_sum
+
+        def iter_dfs(r):
+            st = [r] if r else [] # st is stack
+            res = float('-inf')
+            smap = { None: (0, float('-inf')) }
+
+            while st:
+                node = st[-1] # peek don't pop
+
+                if node.left not in smap and node.left: 
+                    st.append(node.left)
+                elif node.right not in smap and node.right:
+                    st.append(node.right)
+                else:
+                    pn = st.pop() # pn is popped node
+
+                    lsum, lbendsum = smap[pn.left]
+                    rsum, rbendsum = smap[pn.right]
+
+                    lsum = lsum if lsum > 0 else 0
+                    rsum = rsum if rsum > 0 else 0
+
+
+                    smap[pn] = (
+                            pn.val + max(lsum, rsum),
+                            max(pn.val + lsum + rsum, lbendsum, rbendsum)
+                        )
+            
+            return smap[r][1]
+
+        return iter_dfs(root)
+        
+
     def max_path_sum(self, root: Optional[TreeNode]) -> int:
+        return self.find_max_path_sum(root)
 
 
 sol = Solution()
-root = [1,2,3] # Output 6
-# root = [-15,10,20,null,null,15,5,-5] # Output 40
 
+# run from the repo root: python3 -m Trees.binary_tree_maximum_path_sum
+# (root, expected) - root in LeetCode level-order form
+N = 30000
+left_chain_max = [1000] + [x for _ in range(N - 1) for x in (1000, None)]      # 30k deep, every node 1000: the whole chain
+right_chain_min = [-1000] + [x for _ in range(N - 1) for x in (None, -1000)]   # 30k deep, every node -1000: best is one node
+complete_ones = [1] * N                                                         # 30k nodes, height 14: deepest left leaf to deepest right leaf
 
+tests = [
+    ([1,2,3], 6),                                       # example 1, path bends at the root
+    ([-15,10,20,None,None,15,5,-5], 40),                # example 2, best path skips the root
+    ([-3], -3),                                         # single negative node, the answer can be negative
+    ([0], 0),                                           # single zero
+    ([-1,-2,-3], -1),                                   # all negative, best is the single largest node
+    ([2,-1], 2),                                        # negative child, leave it out
+    ([-2,1], 1),                                        # child alone beats anything with the root
+    ([1,-2,3], 4),                                      # drop the negative side, keep root + good side
+    ([-10,9,20,None,None,15,7], 42),                    # classic: 15 -> 20 -> 7, root not used
+    ([5,4,8,11,None,13,4,7,2,None,None,None,1], 48),    # long bent path: 7 -> 11 -> 4 -> 5 -> 8 -> 13
+    ([10,2,10,20,1,None,-25,None,None,None,None,3,4], 42),   # 20 -> 2 -> 10 -> 10, the -25 branch is dropped
+    ([-100,5,6,3,4], 12),                               # best path is entirely inside the left subtree
+    ([10,-5,None,20], 25),                              # worth crossing a negative node: 20 + -5 + 10
+    ([10,-50,None,20], 20),                             # not worth crossing it: 20 alone
+    ([1,2,3,4,None,None,5], 15),                        # both arms are two nodes long: 4 -> 2 -> 1 -> 3 -> 5
+    ([1000,1000,1000], 3000),                           # value limits, positive
+    ([-1000,-1000,-1000], -1000),                       # value limits, negative
+    (left_chain_max, 1000 * N),                         # 30k deep, too deep for plain recursion
+    (right_chain_min, -1000),                           # 30k deep, all negative
+    (complete_ones, 29),                                # 15 nodes down each side, root counted once
+]
 
-print(sol.max_path_sum(root))
+passed = 0
+for vals, expected in tests:
+    try:
+        got = sol.max_path_sum(build_tree(vals))
+    except RecursionError:
+        got = 'ERROR (too deep for recursion)'
+    ok = got == expected
+    passed += ok
+    shown = vals if len(vals) <= 20 else f"[{len(vals)} values]"
+    print(f"{'PASS' if ok else 'FAIL'}  {shown} -> {got}  expected {expected}")
+
+print(f"{passed}/{len(tests)} passed")
