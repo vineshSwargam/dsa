@@ -83,11 +83,6 @@ class Solution:
         while st:
             node, dep = st.pop()
 
-            if node in visited:
-                continue
-            
-            visited.add(node)
-
             if node.left:
                 st.append((node.left, dep+1))
 
@@ -117,16 +112,13 @@ class Solution:
     # top down recursion
     def using_recursion(self, root: Optional[TreeNode]) -> int:
         def depth(node, dep):
-            if not node.left and not node.right:
+            if not node:
                 return dep
-            
-            max_l = depth(node.left, dep+1) if node.left else dep
-            max_r = depth(node.right, dep+1) if node.right else dep
+            max_l = depth(node.left, dep+1)
+            max_r = depth(node.right, dep+1)
             return max(max_l, max_r)
         
-        if not root:
-            return 0
-        return depth(root, 1)
+        return depth(root, 0)
 
     # bottom up recursion
     def using_bottom_up_recursion(self, root: Optional[TreeNode]) -> int:
@@ -141,8 +133,8 @@ class Solution:
 
     def max_depth(self, root: Optional[TreeNode]) -> int:
         # return self.using_tuples(root)
-        # return self.using_recursion(root)
-        return self.using_bottom_up_recursion(root)
+        return self.using_recursion(root)
+        # return self.using_bottom_up_recursion(root)
         
 
 

@@ -127,7 +127,7 @@ class Solution:
 
             return True
 
-        mst = [root] if root else []
+        mst = [root] if root else [] # main stack
         
         while mst:
             node = mst.pop()

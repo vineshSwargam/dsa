@@ -72,11 +72,6 @@ class Solution:
         while q:
             cur = q.pop(0)
 
-            if cur in visited:
-                continue
-
-            visited.add(cur)
-
             temp = cur.left
             cur.left = cur.right
             cur.right = temp

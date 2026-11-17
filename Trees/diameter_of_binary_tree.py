@@ -96,15 +96,14 @@ class Solution:
             best = max(left+right, best)
 
             return 1 + max(left, right)
-        
 
         depth(root)
         return best
 
-    # I didn't write this. It was copied
+    # I didn't write this. It was copied. But I understand it now
     def using_iterative_dfs(self, root: Optional[TreeNode]) -> int:
         stack = [root]
-        mp = {None: (0, 0)}
+        mp = {None: (0, 0)} # the second val in tuple is not necessarily the bend sum of that node, it is the best maximum bend sum of node till that point
 
         while stack:
             node = stack[-1]
