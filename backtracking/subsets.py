@@ -70,14 +70,90 @@
 # 85.1%
 
 
+from typing import List
+from itertools import combinations
+import traceback
+
+
 class Solution:
+    def using_rec_dfs(self, nums: List[int]) -> List[List[int]]:
+        res = []
+        subset = []
+
+        def dfs(i):
+            if i >= len(nums):
+                res.append(subset.copy())
+                return
+            subset.append(nums[i])
+            dfs(i + 1)
+            subset.pop()
+            dfs(i + 1)
+
+        dfs(0)
+        return res
+
+    def using_backtracking(self, nums: List[int]) -> List[List[int]]:
+        res = [] # result array containing all valid subset states
+        nl = len(nums) # nl is nums length
+        def bt(st, lb): # st is state, lb is lower bound
+            ost = st # original state
+            res.append(st.copy()) # [], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]
+            if lb >= nl:
+                return
+            for i in range(lb, nl):
+                st.append(nums[i])
+                bt(st, i+1)
+                st.pop()
+        
+        bt([], 0)
+        return res
+
     def subsets(self, nums: List[int]) -> List[List[int]]:
+        return self.using_backtracking(nums)
 
 
 sol = Solution()
-nums = [1,2,3] # Output [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]
-# nums = [7] # Output [[],[7]]
 
+# run from the repo root: python3 -m backtracking.subsets
+# (nums, expected) - any order is accepted, both for the subsets and for the values inside each subset
+def every_subset(nums):
+    """All 2^n subsets, only used to write the expected answer for the big cases."""
+    return [list(c) for size in range(len(nums) + 1) for c in combinations(nums, size)]
 
+ten = list(range(10))                       # max length, 1024 subsets
+ten_mixed = [10,-10,9,-9,0,5,-5,3,-3,1]     # max length, negatives, unsorted, value limits
 
-print(sol.subsets(nums))
+tests = [
+    ([1,2,3], [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]),     # example 1
+    ([7], [[],[7]]),                                            # example 2
+    ([0], [[],[0]]),                                            # zero is a real value, [0] is not the same as []
+    ([-10], [[],[-10]]),                                        # single negative, value limit
+    ([1,2], [[],[1],[2],[1,2]]),                                # two values, 4 subsets
+    ([3,1,2], [[],[3],[1],[2],[3,1],[3,2],[1,2],[3,1,2]]),      # unsorted input
+    ([-10,10], [[],[-10],[10],[-10,10]]),                       # both value limits
+    ([5,-3,0,7], every_subset([5,-3,0,7])),                     # 16 subsets, mixed signs
+    (ten, every_subset(ten)),                                   # max length, 1024 subsets
+    (ten_mixed, every_subset(ten_mixed)),                       # max length, mixed values
+]
+
+def normal(subsets):
+    """Ignore order: sort inside each subset, then sort the list of subsets. Duplicates still count."""
+    return sorted(sorted(s) for s in subsets)
+
+passed = 0
+for nums, expected in tests:
+    try:
+        got = sol.subsets(list(nums))
+        ok = isinstance(got, list) and normal(got) == normal(expected)
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got, ok = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})', False
+    passed += ok
+    if isinstance(got, list) and len(got) > 16:
+        shown = f"{len(got)} subsets"
+    else:
+        shown = got
+    extra = "" if ok else f"  expected {len(expected)} subsets" + (f" {expected}" if len(expected) <= 16 else "")
+    print(f"{'PASS' if ok else 'FAIL'}  {nums} -> {shown}{extra}")
+
+print(f"{passed}/{len(tests)} passed")
