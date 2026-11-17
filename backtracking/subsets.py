@@ -109,7 +109,8 @@ class Solution:
         return res
 
     def subsets(self, nums: List[int]) -> List[List[int]]:
-        return self.using_backtracking(nums)
+        # return self.using_backtracking(nums)
+        return self.using_rec_dfs(nums)
 
 
 sol = Solution()

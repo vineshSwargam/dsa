@@ -88,7 +88,27 @@
 
 
 class Solution:
+    def using_dfs_bt(self, nums: List[int], target: int) -> List[List[int]]:
+        res = []
+        sub = []
+
+        def bt(i, tot):
+            left = target - tot
+            if left == 0:
+                res.append(sub)
+            elif left < 0:
+                sub.pop()
+            elif left > 0:
+                sub.append(nums[i])
+                bt(i+1)
+                sub.pop()
+                bt(i+1)
+        
+        bt(0)
+        return res
+
     def combination_sum(self, nums: List[int], target: int) -> List[List[int]]:
+        return self.using_dfs_bt(nums, target)
 
 
 sol = Solution()
