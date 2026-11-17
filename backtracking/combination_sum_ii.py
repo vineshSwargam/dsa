@@ -78,6 +78,11 @@
 # 61.2%
 
 
+from typing import List
+from collections import Counter
+import traceback
+
+
 class Solution:
     def using_recur_bt(self, nums: List[int], tar: int) -> List[List[int]]:
         res = []
@@ -104,9 +109,67 @@ class Solution:
 
 
 sol = Solution()
-candidates, target = [9,2,2,4,6,1,5], 8 # Output [
-# candidates, target = [1,2,3,4,5], 7 # Output [
 
+# run from the repo root: python3 -m backtracking.combination_sum_ii
+# (candidates, target, expected) - any order is accepted, both for the combinations and for the numbers inside each one
+# expected is either the full answer, or (for the big cases) just how many combinations there should be.
+# For a count, every combination you return is also checked: it must add up to target, not use a number
+# more times than it appears in candidates, and not repeat another combination in a different order.
+ones_100 = [1] * 100                                    # 100 copies of the same number
+fifties_100 = [50] * 100                                # 100 numbers, all bigger than any target
+one_to_25_x4 = list(range(1, 26)) * 4                   # 1..25 four times each, 100 numbers
+one_to_50_x2 = list(range(1, 51)) + list(range(50, 0, -1))   # 1..50 twice each, unsorted, 100 numbers
 
+tests = [
+    ([9,2,2,4,6,1,5], 8, [[1,2,5],[2,2,4],[2,6]]),      # example 1
+    ([1,2,3,4,5], 7, [[1,2,4],[2,5],[3,4]]),            # example 2
+    ([1], 1, [[1]]),                                    # single number, it is the target
+    ([2], 1, []),                                       # single number, too big
+    ([3], 6, []),                                       # a number can't be reused: 3 + 3 is not allowed
+    ([1,1], 2, [[1,1]]),                                # two copies of 1 are two different numbers, both usable
+    ([1,1,1], 2, [[1,1]]),                              # three ways to pick two 1s, but only one answer
+    ([2,2,2], 4, [[2,2]]),                              # same trap with 2s
+    ([1,1,1,1,1], 3, [[1,1,1]]),                        # ten ways to pick, one answer
+    ([10,1,2,7,6,1,5], 8, [[1,1,6],[1,2,5],[1,7],[2,6]]),   # classic
+    ([2,5,2,1,2], 5, [[1,2,2],[5]]),                    # unsorted, a repeated number used twice
+    ([50,30], 30, [[30]]),                              # value limits, 50 is above the target
+    (ones_100, 30, [[1]*30]),                           # 100 copies: one answer, but a huge number of ways to pick it
+    (fifties_100, 30, []),                              # 100 numbers, none fit
+    (one_to_25_x4, 30, 3014),                           # max length, lots of repeats
+    (one_to_50_x2, 30, 1225),                           # max length, value limits, unsorted
+]
 
-print(sol.combination_sum2(candidates, target))
+def normal(combos):
+    """Ignore order: sort inside each combination, then sort the list. Duplicates still count."""
+    return sorted(sorted(c) for c in combos)
+
+def check(candidates, target, got, expected):
+    if not isinstance(got, list):
+        return False, ""
+    if isinstance(expected, list):
+        return normal(got) == normal(expected), ""
+    have = Counter(candidates)
+    for c in got:
+        if sum(c) != target:
+            return False, f"  {c} adds up to {sum(c)}, not {target}"
+        if Counter(c) - have:
+            return False, f"  {c} uses a number more times than it appears in candidates"
+    if len(set(map(tuple, normal(got)))) != len(got):
+        return False, "  the same combination appears more than once"
+    return len(got) == expected, ""
+
+passed = 0
+for candidates, target, expected in tests:
+    try:
+        got = sol.combination_sum2(list(candidates), target)
+        ok, why = check(candidates, target, got, expected)
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got, ok, why = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})', False, ""
+    passed += ok
+    shown = f"{len(got)} combinations" if isinstance(got, list) and len(got) > 8 else got
+    want = expected if isinstance(expected, int) or len(expected) <= 8 else f"{len(expected)} combinations"
+    cands_shown = candidates if len(candidates) <= 8 else f"[{len(candidates)} numbers]"
+    print(f"{'PASS' if ok else 'FAIL'}  {cands_shown} target={target} -> {shown}" + ("" if ok else f"  expected {want}{why}"))
+
+print(f"{passed}/{len(tests)} passed")
