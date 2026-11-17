@@ -79,7 +79,28 @@
 
 
 class Solution:
+    def using_recur_bt(self, nums: List[int], tar: int) -> List[List[int]]:
+        res = []
+        sub = set()
+        nl = len(nums)
+
+        def bt(i, tot):
+            left = tar - tot
+            if left == 0:
+                res.append(sub)
+                return
+            if i >= nl or left < 0 or nums[i] in sub:
+                return
+            
+            sub.append(nums[i])
+            bt(i+1, tot+nums[i])
+            sub.pop()
+            bt(i+1, tot)
+        
+        bt(0, 0)
+
     def combination_sum2(self, candidates: List[int], target: int) -> List[List[int]]:
+        return self.using_recur_bt(candidates, target)
 
 
 sol = Solution()
