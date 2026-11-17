@@ -95,18 +95,19 @@ class Solution:
     def using_dfs_bt(self, nums: List[int], target: int) -> List[List[int]]:
         res = []
         sub = []
+        nl = len(nums)
 
         def bt(i, tot):
             left = target - tot
+            if left < 0 or i >= nl:
+                return
             if left == 0:
-                res.append(sub)
-            elif left < 0:
-                sub.pop()
-            elif left > 0:
-                sub.append(nums[i])
-                bt(i+1)
-                sub.pop()
-                bt(i+1)
+                res.append(sub.copy())
+                return
+            sub.append(nums[i])
+            bt(i, tot+nums[i])
+            sub.pop()
+            bt(i+1, tot)
         
         bt(0, 0)
         return res
