@@ -65,6 +65,11 @@
 # 85.9%
 
 
+from typing import List
+from math import factorial
+import traceback
+
+
 class Solution:
     def using_recur_bt(self, nums: List[int]) -> List[List[int]]:
         res = []
@@ -80,17 +85,72 @@ class Solution:
             sub.pop()
             bt(i+1)
 
-        bt(nums)
+        bt(0)
         return res
+
+    # def using_recur_bt(self, nums: List[int]) -> List[List[int]]:
+    #     res = []
+
+    #     def bt(ind, sub): # [1, 2, 3]
+    #         if ind >= nl:
+    #             return
+    #         res.append(sub.copy())
+    #         for i in range(nl):
+    #             if i == ind:
+    #                 continue
+    #             sub.append(nums[i])
+    #             bt(i+1, sub)
+    #             sub.pop()
+
+    #     bt(0, [])
+    #     return res
 
     def permute(self, nums: List[int]) -> List[List[int]]:
         return self.using_recur_bt(nums)
 
 
 sol = Solution()
-nums = [1,2,3] # Output [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
-# nums = [7] # Output [[7]]
 
+# run from the repo root: python3 -m backtracking.permutations
+# (nums, expected) - the permutations can come in any order, but the order INSIDE each one matters
+# expected is either the full answer, or (for the big cases) just how many permutations there should be.
+# For a count, every permutation you return is also checked: it must use every number exactly once,
+# and no permutation may appear twice.
+tests = [
+    ([1,2,3], [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]),   # example 1
+    ([7], [[7]]),                                                   # example 2, one number, one permutation
+    ([0,1], [[0,1],[1,0]]),                                         # zero is a real value
+    ([-10,10], [[-10,10],[10,-10]]),                                # value limits
+    ([3,1,2], [[3,1,2],[3,2,1],[1,3,2],[1,2,3],[2,3,1],[2,1,3]]),   # unsorted input, same 6 answers
+    ([0,-1,1], [[0,-1,1],[0,1,-1],[-1,0,1],[-1,1,0],[1,0,-1],[1,-1,0]]),   # negatives
+    ([1,2,3,4], 24),                                                # 4! = 24
+    ([5,4,3,2,1], 120),                                             # 5! = 120, reversed input
+    ([1,2,3,4,5,6], 720),                                           # max length, 6! = 720
+    ([10,-10,0,5,-5,1], 720),                                       # max length, mixed values
+]
 
+def check(nums, got, expected):
+    if not isinstance(got, list):
+        return False, ""
+    if isinstance(expected, list):
+        return sorted(map(list, got)) == sorted(expected), ""
+    for p in got:
+        if sorted(p) != sorted(nums):
+            return False, f"  {list(p)} is not a reordering of {nums}"
+    if len(set(map(tuple, got))) != len(got):
+        return False, "  the same permutation appears more than once"
+    return len(got) == expected, ""
 
-print(sol.permute(nums))
+passed = 0
+for nums, expected in tests:
+    try:
+        got = sol.permute(list(nums))
+        ok, why = check(nums, got, expected)
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got, ok, why = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})', False, ""
+    passed += ok
+    shown = f"{len(got)} permutations" if isinstance(got, list) and len(got) > 6 else got
+    print(f"{'PASS' if ok else 'FAIL'}  {nums} -> {shown}" + ("" if ok else f"  expected {expected}{why}"))
+
+print(f"{passed}/{len(tests)} passed")
