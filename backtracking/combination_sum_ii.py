@@ -85,25 +85,28 @@ import traceback
 
 class Solution:
     def using_recur_bt(self, nums: List[int], tar: int) -> List[List[int]]:
-        res = set()
+        res = []
         sub = []
+        nums.sort()
         nl = len(nums)
 
         def bt(i, tot):
             left = tar - tot
             if left == 0:
-                res.add(tuple(sorted(sub)))
+                res.append(sub.copy())
                 return
-            if i >= nl or left < 0:
+            if i >= nl or left < 0 or nums[i] > left:
                 return
             
             sub.append(nums[i])
             bt(i+1, tot+nums[i])
             sub.pop()
+            while i+1 < nl and nums[i] == nums[i+1]:
+                i += 1
             bt(i+1, tot)
-        
+
         bt(0, 0)
-        return [list(sub) for sub in res]
+        return res
 
     def combination_sum2(self, candidates: List[int], target: int) -> List[List[int]]:
         return self.using_recur_bt(candidates, target)
@@ -135,6 +138,8 @@ tests = [
     ([2,5,2,1,2], 5, [[1,2,2],[5]]),                    # unsorted, a repeated number used twice
     ([50,30], 30, [[30]]),                              # value limits, 50 is above the target
     (ones_100, 30, [[1]*30]),                           # 100 copies: one answer, but a huge number of ways to pick it
+    (ones_100, 1, [[1]]),                           # 100 copies: one answer, but a huge number of ways to pick it
+    (ones_100, 100, [[1]*100]),                           # 100 copies: one answer, but a huge number of ways to pick it
     (fifties_100, 30, []),                              # 100 numbers, none fit
     (one_to_25_x4, 30, 3014),                           # max length, lots of repeats
     (one_to_50_x2, 30, 1225),                           # max length, value limits, unsorted
