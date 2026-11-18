@@ -85,16 +85,16 @@ import traceback
 
 class Solution:
     def using_recur_bt(self, nums: List[int], tar: int) -> List[List[int]]:
-        res = []
-        sub = set()
+        res = set()
+        sub = []
         nl = len(nums)
 
         def bt(i, tot):
             left = tar - tot
             if left == 0:
-                res.append(sub)
+                res.add(tuple(sorted(sub)))
                 return
-            if i >= nl or left < 0 or nums[i] in sub:
+            if i >= nl or left < 0:
                 return
             
             sub.append(nums[i])
@@ -103,6 +103,7 @@ class Solution:
             bt(i+1, tot)
         
         bt(0, 0)
+        return [list(sub) for sub in res]
 
     def combination_sum2(self, candidates: List[int], target: int) -> List[List[int]]:
         return self.using_recur_bt(candidates, target)
