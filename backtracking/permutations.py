@@ -66,7 +66,25 @@
 
 
 class Solution:
+    def using_recur_bt(self, nums: List[int]) -> List[List[int]]:
+        res = []
+        sub = []
+        nl = len(nums)
+    
+        def bt(i):
+            if i >= nl:
+                res.append(sub)
+                return
+            sub.append(nums[i])
+            bt(i+1)
+            sub.pop()
+            bt(i+1)
+
+        bt(nums)
+        return res
+
     def permute(self, nums: List[int]) -> List[List[int]]:
+        return self.using_recur_bt(nums)
 
 
 sol = Solution()
