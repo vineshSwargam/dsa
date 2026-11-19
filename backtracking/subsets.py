@@ -96,7 +96,6 @@ class Solution:
         res = [] # result array containing all valid subset states
         nl = len(nums) # nl is nums length
         def bt(st, lb): # st is state, lb is lower bound
-            ost = st # original state
             res.append(st.copy()) # [], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]
             if lb >= nl:
                 return
