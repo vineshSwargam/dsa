@@ -73,8 +73,56 @@ import traceback
 
 
 class Solution:
+    def using_recur_bt(self, nums: List[int]) -> List[List[int]]:
+        res = []
+        sub = []
+        nums.sort()
+        nl = len(nums)
+
+        def bt(i):
+            if i >= nl:
+                res.append(sub.copy())
+                return
+
+            sub.append(nums[i])
+            bt(i+1)
+
+            sub.pop()
+            while i+1 < nl and nums[i+1] == nums[i]:
+                i += 1
+            bt(i+1)
+
+        bt(0)
+        return res
+
+
+
+    def subsets_for_loop(self, nums: List[int]) -> List[List[int]]:
+        res = []
+        nums.sort()
+        nl = len(nums)
+
+        # [ 1, 2, 3 ] => [ [], [1], [2], [3], [1, 2], [1, 3], [1, 2, 3], [2, 3] ]
+        # now if you have [1, 2, 1] => [ [], [1], [2], [1], [1, 2], [2, 1], [1, 2, 1]
+        # you'd have to sort it first to avoid adding duplicate items
+        # [1, 1, 2] => [ [], continue, [1], [2], [1, 2] ]
+
+        def bt(sub, lb):
+            res.append(sub.copy())
+            for i in range(lb, nl):
+                if i>lb and nums[i] == nums[i-1]:
+                    continue
+                sub.append(nums[i]) # []
+                bt(sub, i+1)
+                sub.pop()
+
+        bt([], 0)
+        return res
+
+    
     def subsets_with_dup(self, nums: List[int]) -> List[List[int]]:
-        return self.subsets_for_loop(nums)
+        # return self.subsets_for_loop(nums)
+        return self.using_recur_bt(nums)
 
 
 sol = Solution()
