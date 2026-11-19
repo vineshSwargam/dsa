@@ -73,39 +73,47 @@ import traceback
 class Solution:
     def using_recur_bt(self, nums: List[int]) -> List[List[int]]:
         res = []
-        sub = []
         nl = len(nums)
     
-        def bt(i):
-            if i >= nl:
-                res.append(sub)
+        def bt(sub, i): # 1, 2, 3
+            print(i, ' - Sub -', sub)
+            if len(sub) == nl:
+                res.append(sub.copy())
                 return
+            if i >= nl:
+                return
+            if nums[i] in sub:
+                bt(sub, i+1)
+                return
+            
             sub.append(nums[i])
-            bt(i+1)
+            bt(sub, 0)
             sub.pop()
-            bt(i+1)
+            bt(sub, i+1)
 
-        bt(0)
+        bt([], 0)
         return res
 
-    # def using_recur_bt(self, nums: List[int]) -> List[List[int]]:
-    #     res = []
+    def using_bt_with_for(self, nums: List[int]) -> List[List[int]]:
+        res = []
+        nl = len(nums)
 
-    #     def bt(ind, sub): # [1, 2, 3]
-    #         if ind >= nl:
-    #             return
-    #         res.append(sub.copy())
-    #         for i in range(nl):
-    #             if i == ind:
-    #                 continue
-    #             sub.append(nums[i])
-    #             bt(i+1, sub)
-    #             sub.pop()
+        def bt(sub, sl): # [1, 2, 3]
+            if sl == nl:
+                res.append(sub.copy())
+                return
+            for i in range(nl):
+                if nums[i] in sub:
+                    continue
+                sub.append(nums[i])
+                bt(sub, sl+1)
+                sub.pop()
 
-    #     bt(0, [])
-    #     return res
+        bt([], 0)
+        return res
 
     def permute(self, nums: List[int]) -> List[List[int]]:
+        # return self.using_bt_with_for(nums)
         return self.using_recur_bt(nums)
 
 
