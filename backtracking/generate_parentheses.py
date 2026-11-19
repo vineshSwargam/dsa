@@ -66,14 +66,68 @@
 # 82.0%
 
 
+from typing import List
+import traceback
+
+
 class Solution:
     def generate_parenthesis(self, n: int) -> List[str]:
+        pass
 
 
 sol = Solution()
-n = 1 # Output ["()"]
-# n = 3 # Output ["((()))","(()())","(())()","()(())","()()()"]
 
+# run from the repo root: python3 -m backtracking.generate_parentheses
+# (n, expected) - the strings can come in any order
+# expected is either the full answer, or (for bigger n) just how many strings there should be.
+# For a count, every string you return is also checked: length 2n, only ( and ), never more ) than ( so far,
+# equal counts at the end, and no string appears twice.
+tests = [
+    (1, ["()"]),                                            # example 1
+    (2, ["(())","()()"]),                                   # smallest case with a choice
+    (3, ["((()))","(()())","(())()","()(())","()()()"]),    # example 2
+    (4, 14),
+    (5, 42),
+    (6, 132),
+    (7, 429),                                               # max n
+]
 
+def problem(s, n):
+    """Returns why s is not a valid answer for n, or None if it is."""
+    if not isinstance(s, str) or len(s) != 2 * n:
+        return f"{s!r} should be a string of length {2 * n}"
+    bal = 0
+    for ch in s:
+        if ch not in "()":
+            return f"{s!r} has a character that is not ( or )"
+        bal += 1 if ch == "(" else -1
+        if bal < 0:
+            return f"{s!r} closes a bracket that was never opened"
+    return None if bal == 0 else f"{s!r} leaves {bal} bracket(s) open"
 
-print(sol.generate_parenthesis(n))
+def check(n, got, expected):
+    if not isinstance(got, list):
+        return False, ""
+    if isinstance(expected, list):
+        return sorted(got) == sorted(expected), ""
+    for s in got:
+        why = problem(s, n)
+        if why:
+            return False, "  " + why
+    if len(set(got)) != len(got):
+        return False, "  the same string appears more than once"
+    return len(got) == expected, ""
+
+passed = 0
+for n, expected in tests:
+    try:
+        got = sol.generate_parenthesis(n)
+        ok, why = check(n, got, expected)
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got, ok, why = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})', False, ""
+    passed += ok
+    shown = f"{len(got)} strings" if isinstance(got, list) and len(got) > 5 else got
+    print(f"{'PASS' if ok else 'FAIL'}  n={n} -> {shown}" + ("" if ok else f"  expected {expected}{why}"))
+
+print(f"{passed}/{len(tests)} passed")
