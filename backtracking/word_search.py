@@ -87,7 +87,7 @@ import traceback
 
 class Solution:
   def using_recur_bt(self, board, target):
-    visd = set() # visited
+    # visd = set() # visited
     ib = len(board)
     jb = len(board[0])
 
@@ -98,20 +98,16 @@ class Solution:
       if not (ib-1 >= i >=0 and jb-1 >= j >=0):
         return False
 
-      tup = (i, j)
-      if tup in visd or board[i][j] != target[wl]:
+      if board[i][j] != target[wl]:
         return False
 
-      visd.add(tup)
-      if search(wl+1, i+1, j):
-        return True
-      if search(wl+1, i-1, j):
-        return True
-      if search(wl+1, i, j+1):
-        return True
-      if search(wl+1, i, j-1):
-        return True
-      visd.remove(tup)
+      tmp = board[i][j]
+      board[i][j] = '#'
+
+      found = search(wl+1, i+1, j) or search(wl+1, i-1, j) or search(wl+1, i, j+1) or search(wl+1, i, j-1):
+
+      board[i][j] = tmp
+      return found
 
     for i in range(ib):
       for j in range(jb):
