@@ -86,8 +86,60 @@ import traceback
 
 
 class Solution:
-    def exist(self, board: List[List[str]], word: str) -> bool:
-        pass
+  def using_recur_bt(self, board, target):
+    if not board:
+      return False
+    
+    res = False
+    visd = set() # visited
+    ib = len(board)
+    jb = len(board[0])
+
+    def search(w, i, j):
+      nonlocal res
+      
+      if w:
+        if not target.startswith(w):
+          return
+        if w == target:
+          res = True
+          return
+
+      if (i, j) in visd:
+        return
+
+      if i < 0 or i > ib-1 or j < 0 or j > jb-1:
+        return
+
+      visd.add((i, j))
+      search(w + board[i][j], i+1, j)
+      visd.remove((i, j))
+
+      visd.add((i, j))
+      search(w + board[i][j], i-1, j)
+      visd.remove((i, j))
+
+      visd.add((i, j))
+      search(w + board[i][j], i, j+1)
+      visd.remove((i, j))
+
+      visd.add((i, j))
+      search(w + board[i][j], i, j-1)
+      visd.remove((i, j))
+
+    for i in range(ib):
+      if res:
+          break
+      for j in range(jb):
+        if res:
+          break
+        search('', i, j)
+
+    return res
+
+
+  def exist(self, board: List[List[str]], word: str) -> bool:
+      return self.using_recur_bt(board, word)
 
 
 sol = Solution()
