@@ -80,22 +80,72 @@
 # 48.0%
 
 
+from typing import List
+import copy
+import traceback
+
+
 class Solution:
     def exist(self, board: List[List[str]], word: str) -> bool:
+        pass
 
 
 sol = Solution()
-board, word = [
-  ["A","B","C","D"],
-  ["S","A","A","T"],
-  ["A","C","A","E"]
-], "CAT" # Output true
-# board, word = [
-  ["A","B","C","D"],
-  ["S","A","A","T"],
-  ["A","C","A","E"]
-], "BAT" # Output false
 
+# run from the repo root: python3 -m backtracking.word_search
+# (board, word, expected) - each test gets its own copy of the board, so changing it inside your solution is fine
+ex = [["A","B","C","D"],
+      ["S","A","A","T"],
+      ["A","C","A","E"]]                                        # board from the examples
+lc = [["A","B","C","E"],
+      ["S","F","C","S"],
+      ["A","D","E","E"]]                                        # another classic board
+snake = [list("ABCDE"),
+         list("JIHGF"),
+         list("KLMNO"),
+         list("TSRQP"),
+         list("UVWXY")]                                         # 5x5, the alphabet winds back and forth
+all_a = [["A"]*5 for _ in range(5)]                             # 5x5, every cell is A
+corner_b = [["A"]*5 for _ in range(4)] + [["A"]*4 + ["B"]]      # 5x5 of A, with one B in the bottom-right corner
 
+tests = [
+    (ex, "CAT", True),                                          # example 1
+    (ex, "BAT", False),                                         # example 2: B has no A next to it
+    (ex, "XYZ", False),                                         # letters that are not on the board at all
+    ([["A"]], "A", True),                                       # 1x1 board
+    ([["A"]], "B", False),                                      # 1x1, wrong letter
+    ([["A"]], "AA", False),                                     # the same cell can't be used twice
+    ([["A","A"]], "AAA", False),                                # two A cells, a word needing three
+    ([["A","B"],["C","D"]], "ABDC", True),                      # path turns a corner
+    ([["A","B"],["C","D"]], "ABCD", False),                     # B to C would be a diagonal move
+    ([["A","B"],["C","D"]], "ABDCA", False),                    # a full loop would come back to A
+    (lc, "ABCCED", True),                                       # classic, path turns twice
+    (lc, "SEE", True),                                          # classic, starts away from the top-left
+    (lc, "ABCB", False),                                        # classic: needs B again, the only B is used
+    ([["a","A"]], "aA", True),                                  # upper and lower case are different letters
+    ([["a","A"]], "AA", False),                                 # ...so 'a' does not count as 'A'
+    ([["C","A","A"],["A","A","A"],["B","C","D"]], "AAB", True), # many A paths, only one ends next to B
+    ([list("ABCDE")], "EDCBA", True),                           # one row, read backwards
+    ([[x] for x in "ABCDE"], "BCDE", True),                     # one column, starts in the middle
+    (snake, "ABCDEFGHIJ", True),                                # max word length, path snakes down the board
+    (snake, "ABCDEFGHIK", False),                               # same, but the last step is not a neighbour
+    (all_a, "AAAAAAAAAA", True),                                # max board and word, all the same letter
+    (corner_b, "AAAAAAAAAB", True),                             # must end exactly next to the one B
+    (all_a, "AAAAAAAAAB", False),                               # worst case: every path is tried, and none ends in B
+]
 
-print(sol.exist(board, word))
+def show(board):
+    return "[" + ",".join("".join(row) for row in board) + "]"
+
+passed = 0
+for board, word, expected in tests:
+    try:
+        got = sol.exist(copy.deepcopy(board), word)
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})'
+    ok = got == expected
+    passed += ok
+    print(f"{'PASS' if ok else 'FAIL'}  {show(board)} {word!r} -> {got}" + ("" if ok else f"  expected {expected}"))
+
+print(f"{passed}/{len(tests)} passed")
