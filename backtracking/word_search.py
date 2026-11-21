@@ -104,7 +104,7 @@ class Solution:
       tmp = board[i][j]
       board[i][j] = '#'
 
-      found = search(wl+1, i+1, j) or search(wl+1, i-1, j) or search(wl+1, i, j+1) or search(wl+1, i, j-1):
+      found = search(wl+1, i+1, j) or search(wl+1, i-1, j) or search(wl+1, i, j+1) or search(wl+1, i, j-1)
 
       board[i][j] = tmp
       return found
