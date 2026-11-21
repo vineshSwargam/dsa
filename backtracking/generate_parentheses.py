@@ -71,8 +71,38 @@ import traceback
 
 
 class Solution:
+    def using_recur_bt(self, n: int) -> List[str]:
+        # 2 pairs => [(()), ()()]
+        # 3 pairs => [((())), ()()(), (()()), (())(), ()(())]
+        res = []
+        
+        # we basically have a list of '(' of n items and another list of ')' of n items. 
+        # We need to make combinations of this combined list
+        def bt(sub, oc, cc):
+            sl = len(sub)
+            if sl == n*2:
+                res.append(''.join(sub))
+                return
+            
+            
+            if oc < cc or oc < n:
+                sub.append('(')
+                bt(sub, oc+1, cc)
+                sub.pop()
+            
+            if cc < oc:
+                sub.append(')')
+                bt(sub, oc, cc+1)
+                sub.pop()
+
+        bt([], 0, 0)
+        return res
+    
+    def using_stack(self, n):
+        st = []
+
     def generate_parenthesis(self, n: int) -> List[str]:
-        pass
+        return self.using_recur_bt(n)
 
 
 sol = Solution()
