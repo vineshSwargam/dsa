@@ -87,55 +87,38 @@ import traceback
 
 class Solution:
   def using_recur_bt(self, board, target):
-    if not board:
-      return False
-    
-    res = False
     visd = set() # visited
     ib = len(board)
     jb = len(board[0])
 
-    def search(w, i, j):
-      nonlocal res
-      
-      if w:
-        if not target.startswith(w):
-          return
-        if w == target:
-          res = True
-          return
+    def search(wl, i, j):
+      if wl == len(target):
+        return True
 
-      if (i, j) in visd:
-        return
+      if not (ib-1 >= i >=0 and jb-1 >= j >=0):
+        return False
 
-      if i < 0 or i > ib-1 or j < 0 or j > jb-1:
-        return
+      tup = (i, j)
+      if tup in visd or board[i][j] != target[wl]:
+        return False
 
-      visd.add((i, j))
-      search(w + board[i][j], i+1, j)
-      visd.remove((i, j))
-
-      visd.add((i, j))
-      search(w + board[i][j], i-1, j)
-      visd.remove((i, j))
-
-      visd.add((i, j))
-      search(w + board[i][j], i, j+1)
-      visd.remove((i, j))
-
-      visd.add((i, j))
-      search(w + board[i][j], i, j-1)
-      visd.remove((i, j))
+      visd.add(tup)
+      if search(wl+1, i+1, j):
+        return True
+      if search(wl+1, i-1, j):
+        return True
+      if search(wl+1, i, j+1):
+        return True
+      if search(wl+1, i, j-1):
+        return True
+      visd.remove(tup)
 
     for i in range(ib):
-      if res:
-          break
       for j in range(jb):
-        if res:
-          break
-        search('', i, j)
+        if search(0, i, j):
+          return True
 
-    return res
+    return False
 
 
   def exist(self, board: List[List[str]], word: str) -> bool:
