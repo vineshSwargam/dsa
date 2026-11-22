@@ -84,18 +84,27 @@ class Solution:
         # The piece in your hand is s[j..i]. It isn't in part yet
         # The piece in your hand is everything from j to i.
         # At each letter, you decide: cut here (only if the piece in your hand is a palindrome), or keep walking, so the piece gets one letter longer
+
+        pali = [[False for _ in range(sl)] for _ in range(sl)]
+
+        for i in range(sl-1, -1, -1): # a b
+            for j in range(i, sl):
+                if s[i] == s[j] and (j-i <= 2 or pali[i+1][j-1]):
+                    pali[i][j] = True
+                else:
+                    pali[i][j] = False
+
         
         def bt(sub, j, i): 
             if i >= sl:
                 if j == i:
                     res.append(sub.copy())
                 return
-
-            piece = s[j:i+1]
+            
             # check if pali
-            if piece == piece[::-1]:
+            if pali[j][i]:
                 # take the split
-                sub.append(piece)
+                sub.append(s[j:i+1])
                 bt(sub, i+1, i+1)
                 # skip the split
                 sub.pop()
@@ -105,10 +114,34 @@ class Solution:
         bt([], 0, 0)
         return res
 
+    def using_for_look_ahead(self, s):
+        res = []
+        sl = len(s)
+        pali = [[False for _ in range(sl)] for _ in range(sl)]
 
+        for i in range(sl-1, -1, -1): # a b
+            for j in range(i, sl):
+                if s[i] == s[j] and (j-i <= 2 or pali[i+1][j-1]):
+                    pali[i][j] = True
+                else:
+                    pali[i][j] = False
+
+        def bt(sub, start):
+            if start == sl:
+                res.append(sub.copy())
+            
+            for end in range(start, sl):
+                if pali[start][end]:
+                    sub.append(s[start:end+1])
+                    bt(sub, end+1)
+                    sub.pop()
+
+        bt([], 0)
+        return res
 
     def partition(self, s: str) -> List[List[str]]:
-        return self.using_recur_bt(s)
+        # return self.using_recur_bt(s)
+        return self.using_for_look_ahead(s)
 
 
 sol = Solution()
