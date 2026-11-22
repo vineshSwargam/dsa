@@ -79,8 +79,51 @@ import traceback
 
 
 class Solution:
+    def using_iter_bt(self, n):
+        res = []
+        board = [['.'] * n for _ in range(n)]
+        cols = [-1]*n
+
+        def is_safe(row, col):
+            for r in range(row):
+                for c in range(n):
+                    if board[r][c] == 'Q':
+                        if col == c:
+                            return False
+                        if abs(row-r) == abs(col-c):
+                            return False
+            return True
+
+        row = 0
+        while row >= 0:
+            if row == n:
+                res.append([''.join(row) for row in board])
+                row -= 1
+                continue
+
+            cur_ind = cols[row]
+            if cur_ind > -1:
+                board[row][cur_ind] = '.'
+
+            cur_ind += 1
+            while cur_ind < n and not is_safe(row, cur_ind):
+                cur_ind += 1
+            
+            # couldn't find valid index
+            if cur_ind == n:
+                cols[row] = -1
+                row -= 1
+                continue
+
+            # found safe index
+            board[row][cur_ind] = 'Q'
+            cols[row] = cur_ind
+            row += 1
+        
+        return res
+
     def solve_n_queens(self, n: int) -> List[List[str]]:
-        pass
+        return self.using_iter_bt(n)
 
 
 sol = Solution()
