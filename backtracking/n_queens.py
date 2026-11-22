@@ -81,27 +81,28 @@ import traceback
 class Solution:
     def using_iter_bt(self, n):
         res = []
-        board = [['.'] * n for _ in range(n)]
         cols = [-1]*n
         used_cols = set()
         used_row_min_col = set()
         used_row_plus_col = set()
 
         def is_safe(row, col):
-            if col in cols or (row-col) in used_row_min_col or (row+col) in used_row_plus_col:
-                return False
-            return True
+            return not (col in used_cols or (row-col) in used_row_min_col or (row+col) in used_row_plus_col)
 
         row = 0
         while row >= 0:
             if row == n:
-                res.append([''.join(row) for row in board])
+                board = []
+                for q in cols:
+                    s = '.'*q + 'Q' + '.'*(n-q-1)
+                    board.append(s)
+                res.append(board)
+
                 row -= 1
                 continue
 
             cur_ind = cols[row]
             if cur_ind > -1:
-                board[row][cur_ind] = '.'
                 used_cols.remove(cur_ind)
                 used_row_min_col.remove(row-cur_ind)
                 used_row_plus_col.remove(row+cur_ind)
@@ -117,7 +118,6 @@ class Solution:
                 continue
 
             # found safe index
-            board[row][cur_ind] = 'Q'
             cols[row] = cur_ind
             used_cols.add(cur_ind)
             used_row_min_col.add(row-cur_ind)
