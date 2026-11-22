@@ -74,14 +74,72 @@
 # 79.9%
 
 
+from typing import List
+import traceback
+
+
 class Solution:
     def solve_n_queens(self, n: int) -> List[List[str]]:
+        pass
 
 
 sol = Solution()
-n = 4 # Output [[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]
-# n = 1 # Output [["Q"]]
 
+# run from the repo root: python3 -m backtracking.n_queens
+# (n, expected) - the boards can come in any order
+# expected is either the full answer, or (for the bigger boards) just how many solutions there should be.
+# For a count, every board you return is also checked: n rows of n characters, only 'Q' and '.',
+# one queen in every row and every column, no two queens on a diagonal, and no board appears twice.
+tests = [
+    (1, [["Q"]]),                                                       # example 2, one square
+    (2, []),                                                            # no solution: the 2 queens always attack
+    (3, []),                                                            # no solution either
+    (4, [[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]), # example 1
+    (5, 10),
+    (6, 4),                                                             # fewer solutions than n = 5
+    (7, 40),
+    (8, 92),                                                            # max n, the classic 8 queens
+]
 
+def problem(n, board):
+    """Why this board is not a valid answer, or None if it is fine."""
+    if not isinstance(board, list) or len(board) != n:
+        return f"{board} does not have {n} rows"
+    cols, diag, anti = set(), set(), set()
+    for r, row in enumerate(board):
+        if not isinstance(row, str) or len(row) != n or set(row) - {"Q", "."}:
+            return f"row {row!r} must be a string of {n} characters, only 'Q' and '.'"
+        if row.count("Q") != 1:
+            return f"row {row!r} must have exactly one queen"
+        c = row.index("Q")
+        if c in cols or r - c in diag or r + c in anti:
+            return f"{board}: the queen in row {r} is attacked"
+        cols.add(c); diag.add(r - c); anti.add(r + c)
+    return None
 
-print(sol.solve_n_queens(n))
+def check(n, got, expected):
+    if not isinstance(got, list):
+        return False, ""
+    if isinstance(expected, list):
+        return sorted(map(list, got)) == sorted(expected), ""
+    for board in got:
+        why = problem(n, board)
+        if why:
+            return False, "  " + why
+    if len(set(map(tuple, got))) != len(got):
+        return False, "  the same board appears more than once"
+    return len(got) == expected, ""
+
+passed = 0
+for n, expected in tests:
+    try:
+        got = sol.solve_n_queens(n)
+        ok, why = check(n, got, expected)
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got, ok, why = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})', False, ""
+    passed += ok
+    shown = f"{len(got)} boards" if isinstance(got, list) and len(got) > 2 else got
+    print(f"{'PASS' if ok else 'FAIL'}  n={n} -> {shown}" + ("" if ok else f"  expected {expected}{why}"))
+
+print(f"{passed}/{len(tests)} passed")
