@@ -76,8 +76,33 @@ import traceback
 
 
 class Solution:
+    def using_recur_bt(self, digits: str) -> List[str]:
+        res = []
+        dm = [None, None, 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz']
+
+        def bt(s, ind):
+            if not digits:
+                return res
+            
+            slot = len(s)
+
+            if slot == len(str(digits)):
+                res.append(s)
+                return
+
+            cur_chars = dm[int(digits[slot])]
+            if ind >= len(cur_chars):
+                return
+
+            ch = cur_chars[ind]  # ch is the letter to append
+            bt(s+ch, 0)
+            bt(s, ind+1)  # no pop needed, s was never touched
+        
+        bt('', 0)
+        return res
+        
     def letter_combinations(self, digits: str) -> List[str]:
-        pass
+        return self.using_recur_bt(digits)
 
 
 sol = Solution()
