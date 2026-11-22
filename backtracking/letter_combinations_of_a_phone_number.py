@@ -78,11 +78,13 @@ import traceback
 class Solution:
     def using_recur_bt(self, digits: str) -> List[str]:
         res = []
-        dm = [None, None, 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz']
 
+        if not digits:
+            return res
+
+        dm = [None, None, 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz']
+        
         def bt(s, ind):
-            if not digits:
-                return res
             
             slot = len(s)
 
@@ -101,8 +103,29 @@ class Solution:
         bt('', 0)
         return res
         
+    def using_dfs_for(self, digits: str) -> List[str]:
+        res = []
+
+        if not digits:
+            return res
+
+        dm = [None, None, 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz']
+
+        def bt(s, ind):
+            if ind == len(str(digits)):
+                res.append(s)
+                return
+
+            for c in dm[int(digits[ind])]:
+                bt(s+c, ind+1)
+
+        bt('', 0)
+        return res
+
+
     def letter_combinations(self, digits: str) -> List[str]:
-        return self.using_recur_bt(digits)
+        # return self.using_recur_bt(digits)
+        return self.using_dfs_for(digits)
 
 
 sol = Solution()
