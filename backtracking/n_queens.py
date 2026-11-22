@@ -83,15 +83,13 @@ class Solution:
         res = []
         board = [['.'] * n for _ in range(n)]
         cols = [-1]*n
+        used_cols = set()
+        used_row_min_col = set()
+        used_row_plus_col = set()
 
         def is_safe(row, col):
-            for r in range(row):
-                for c in range(n):
-                    if board[r][c] == 'Q':
-                        if col == c:
-                            return False
-                        if abs(row-r) == abs(col-c):
-                            return False
+            if col in cols or (row-col) in used_row_min_col or (row+col) in used_row_plus_col:
+                return False
             return True
 
         row = 0
@@ -104,6 +102,9 @@ class Solution:
             cur_ind = cols[row]
             if cur_ind > -1:
                 board[row][cur_ind] = '.'
+                used_cols.remove(cur_ind)
+                used_row_min_col.remove(row-cur_ind)
+                used_row_plus_col.remove(row+cur_ind)
 
             cur_ind += 1
             while cur_ind < n and not is_safe(row, cur_ind):
@@ -118,6 +119,9 @@ class Solution:
             # found safe index
             board[row][cur_ind] = 'Q'
             cols[row] = cur_ind
+            used_cols.add(cur_ind)
+            used_row_min_col.add(row-cur_ind)
+            used_row_plus_col.add(row+cur_ind)
             row += 1
         
         return res
