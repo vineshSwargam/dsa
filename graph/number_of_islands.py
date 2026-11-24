@@ -164,6 +164,39 @@ class Solution:
 
     return res
   
+  def using_iter_bt_optim(self, grid):
+    res = 0
+    explored = set()
+    rows = len(grid)
+    cols = len(grid[0])
+  
+    def iter_expl(i, j):
+      st = [(i, j)] # stack to keep track next cells to explore
+      while st:
+        (i, j) = st.pop()
+
+        if i+1 < rows and grid[i+1][j] == '1' and (i+1, j) not in explored:
+          explored.add((i+1, j))
+          st.append((i+1, j))
+        if i-1 >= 0 and grid[i-1][j] == '1' and (i-1, j) not in explored:
+          explored.add((i-1, j))
+          st.append((i-1, j))
+        if j+1 < cols and grid[i][j+1] == '1' and (i, j+1) not in explored:
+          explored.add((i, j+1))
+          st.append((i, j+1))
+        if j-1 >= 0 and grid[i][j-1] == '1' and (i, j-1) not in explored:
+          explored.add((i, j-1))
+          st.append((i, j-1))
+        
+    for r in range(rows):
+      for c in range(cols):
+        if grid[r][c] == '1' and (r, c) not in explored:
+          res += 1
+          explored.add((r, c))
+          iter_expl(r, c)
+
+    return res
+
   def using_iter_bt(self, grid):
     res = 0
     explored = set()
@@ -176,22 +209,14 @@ class Solution:
       while st:
         (i, j) = st.pop()
 
-        if min(i, j) < 0 or j >= cols or i >= rows or grid[i][j] == '0':
+        if min(i, j) < 0 or j >= cols or i >= rows or grid[i][j] == '0' or (i, j) in explored:
           continue
         
-
-        if (i+1, j) not in explored:
-          explored.add((i+1, j))
-          st.append((i+1, j))
-        if (i-1, j) not in explored:
-          explored.add((i-1, j))
-          st.append((i-1, j))
-        if (i, j+1) not in explored:
-          explored.add((i, j+1))
-          st.append((i, j+1))
-        if (i, j-1) not in explored:
-          explored.add((i, j-1))
-          st.append((i, j-1))
+        explored.add((i, j))
+        st.append((i+1, j))
+        st.append((i-1, j))
+        st.append((i, j+1))
+        st.append((i, j-1))
       
     for r in range(rows):
       for c in range(cols):
@@ -201,9 +226,10 @@ class Solution:
 
     return res
 
-    
+
   def num_islands(self, grid: List[List[str]]) -> int:
-      return self.using_iter_bt(grid)
+      # return self.using_iter_bt(grid)
+      return self.using_iter_bt_optim(grid)
       # return self.using_recur_bt(grid)
 
 
