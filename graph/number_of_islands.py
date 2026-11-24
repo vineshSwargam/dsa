@@ -133,8 +133,41 @@ import traceback
 
 
 class Solution:
-    def num_islands(self, grid: List[List[str]]) -> int:
-        pass
+  def using_recur_bt(self, grid):
+    res = 0
+    explored = set()
+    rows = len(grid)
+    cols = len(grid[0])
+
+    def explore(i, j):
+      if min(i, j) < 0 or j >= cols or i >= rows or grid[i][j] == '0':
+        return
+
+      explored.add((i, j))
+
+      if (i+1, j) not in explored:
+        explore(i+1, j)
+      if (i-1, j) not in explored:
+        explore(i-1, j)
+      if (i, j+1) not in explored:
+        explore(i, j+1)
+      if (i, j-1) not in explored:
+        explore(i, j-1)
+      
+      return
+    
+    for r in range(rows):
+      for c in range(cols):
+        if grid[r][c] == '1' and (r, c) not in explored:
+          res += 1
+          explore(r, c)
+
+    return res
+  
+   
+  def num_islands(self, grid: List[List[str]]) -> int:
+      return self.using_iter_bt(grid)
+      # return self.using_recur_bt(grid)
 
 
 sol = Solution()
