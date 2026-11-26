@@ -113,7 +113,9 @@ class Solution:
         for r in range(rows):
             for c in range(cols):
                 if grid[r][c] == 0:
+                    # Tuple doesn't need distance because treasure starts at zero and every next neighbor of the treasure is being overridden to the distance value so the immediate neighbor of treasure becomes one and everything after that it becomes two, three and four so we can just do grade ij plus one everywhere instead 
                     q.append((r, c))
+
 
         while q:
             i, j = q.popleft()
