@@ -100,11 +100,44 @@
 from typing import List
 import copy
 import traceback
+from collections import deque
 
 
 class Solution:
+    def using_recur_bfs(self, grid):
+        rows = len(grid)
+        cols = len(grid[0])
+        q = deque([]) 
+
+        # q will be initiated with the 4 surrounding cells of all treasure positions first
+        for r in range(rows):
+            for c in range(cols):
+                if grid[r][c] == 0:
+                    q.append((r, c, 0))
+
+
+        while q:
+            i, j, dist = q.popleft()
+
+            # each treasure position can save 4 directions and move on. 
+            # q.extend(get_next_queue(i, j, dist+1, rows, cols, grid))
+
+            if i+1 < rows and grid[i+1][j] == INF:
+                grid[i+1][j] = dist+1
+                q.append((i+1, j, dist+1))
+            if i-1 >= 0 and grid[i-1][j] == INF:
+                grid[i-1][j] = dist+1
+                q.append((i-1, j, dist+1))
+            if j+1 < cols and grid[i][j+1] == INF:
+                grid[i][j+1] = dist+1
+                q.append((i, j+1, dist+1))
+            if j-1 >= 0 and grid[i][j-1] == INF:
+                grid[i][j-1] = dist+1
+                q.append((i, j-1, dist+1))
+
+    
     def islands_and_treasure(self, grid: List[List[int]]) -> None:
-        pass
+        return self.using_recur_bfs(grid)
 
 
 sol = Solution()
