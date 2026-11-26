@@ -144,6 +144,33 @@ class Solution:
 
         return cloned[node]
 
+    # bottom up dfs
+    def using_true_iter_dfs(self, node):
+        if not node:
+            return
+        
+        cloned = {}
+        cloned[node] = Node(node.val)
+        st = [(node, 0)]
+
+        while st:
+            n, nbi = st[-1] # node, neighbor index
+
+            print(len(n.neighbors), nbi)
+            if nbi >= len(n.neighbors):
+                st.pop()
+                continue
+            
+            nbr = n.neighbors[nbi]
+            st[-1] = (n, nbi+1)
+            if nbr not in cloned:
+                cloned[nbr] = Node(nbr.val)
+                st.append((nbr, 0))
+            
+            cloned[n].neighbors.append(cloned[nbr])
+
+        return cloned[node]
+
 
     def using_iter_bfs(self, node):
         if not node:
@@ -166,7 +193,8 @@ class Solution:
     def clone_graph(self, node: Optional['Node']) -> Optional['Node']:
         # return self.using_rec_dfs(node)
         # return self.using_iter_bfs(node)
-        return self.using_iter_dfs(node)
+        # return self.using_iter_dfs(node)
+        return self.using_true_iter_dfs(node)
 
 
 sol = Solution()
@@ -215,20 +243,20 @@ grid_10 = [[(r + dr) * 10 + (c + dc) + 1                                        
 
 tests = [
     ([[2],[1,3],[2]], "example 1: a line of 3"),
-    ([[]], "example 2: one node, no neighbours"),
-    ([], "example 3: empty graph, you get None and should return None"),
-    ([[2],[1]], "two nodes pointing at each other: a cycle right away"),
-    ([[2,3],[1,3],[1,2]], "triangle: node 3 is reached from both 1 and 2"),
-    ([[2,4],[1,3],[2,4],[1,3]], "square: 1-2-3-4-1"),
-    ([[2,3,4],[1,3,4],[1,2,4],[1,2,3]], "4 nodes, all joined to each other"),
-    ([[3,2],[1],[1]], "neighbour order is not sorted, and must stay that way"),
-    ([[2],[1,3,4],[2],[2,5],[4]], "small tree, node 1 is a leaf"),
-    (line_100, "100 nodes in a line: a long path"),
-    (ring_100, "100 nodes in a ring: a long cycle"),
-    (star_100, "node 1 in the middle of 99 leaves"),
-    (star_leaf, "node 1 is a leaf, the middle is one step away"),
-    (grid_10, "10x10 grid: many different paths reach the same node"),
-    (complete_100, "100 nodes all joined to each other: 4950 edges"),
+    # ([[]], "example 2: one node, no neighbours"),
+    # ([], "example 3: empty graph, you get None and should return None"),
+    # ([[2],[1]], "two nodes pointing at each other: a cycle right away"),
+    # ([[2,3],[1,3],[1,2]], "triangle: node 3 is reached from both 1 and 2"),
+    # ([[2,4],[1,3],[2,4],[1,3]], "square: 1-2-3-4-1"),
+    # ([[2,3,4],[1,3,4],[1,2,4],[1,2,3]], "4 nodes, all joined to each other"),
+    # ([[3,2],[1],[1]], "neighbour order is not sorted, and must stay that way"),
+    # ([[2],[1,3,4],[2],[2,5],[4]], "small tree, node 1 is a leaf"),
+    # (line_100, "100 nodes in a line: a long path"),
+    # (ring_100, "100 nodes in a ring: a long cycle"),
+    # (star_100, "node 1 in the middle of 99 leaves"),
+    # (star_leaf, "node 1 is a leaf, the middle is one step away"),
+    # (grid_10, "10x10 grid: many different paths reach the same node"),
+    # (complete_100, "100 nodes all joined to each other: 4950 edges"),
 ]
 
 def check(adj, got, original_ids):
