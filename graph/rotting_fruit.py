@@ -72,14 +72,95 @@
 # 51.3%
 
 
+from typing import List
+from collections import deque
+import copy
+import traceback
+from collections import deque
+
+
 class Solution:
+    def iter_bfs(grid):
+        rows = len(grid)
+        cols = len(grid[0])
+        min_mins = float('-inf')
+        q = deque([])
+
+        # while q:
+
+for i in range(rows):
+for j in range(cols):
+if grid[i][j] == 2:
+# add it to as sources in the queue
+
+        
+
     def oranges_rotting(self, grid: List[List[int]]) -> int:
+        pass
 
 
 sol = Solution()
-grid = [[1,1,0],[0,1,1],[0,1,2]] # Output 4
-# grid = [[1,0,1],[0,2,0],[1,0,1]] # Output -1
 
+# run from the repo root: python3 -m graph.rotting_fruit
+# (grid, expected minutes) - each test gets its own copy of the grid, so changing it inside your solution is fine
+# 0 = empty, 1 = fresh, 2 = rotten
+def g(*rows):
+    """Write a grid as strings: g("120", "011") is [[1,2,0],[0,1,1]]."""
+    return [[int(ch) for ch in r] for r in rows]
 
+def full(n, value):
+    return [[value] * n for _ in range(n)]
 
-print(sol.oranges_rotting(grid))
+corner = full(10, 1); corner[0][0] = 2                      # 10x10 fresh, rotten in one corner
+middle = full(10, 1); middle[4][4] = 2                      # 10x10 fresh, rotten near the middle
+two_corners = full(10, 1); two_corners[0][0] = 2; two_corners[9][9] = 2
+almost = full(10, 1); almost[0][0] = 2; almost[9][9] = 0      # same, but the far corner is empty
+cut_off = full(10, 1); cut_off[0][0] = 2; cut_off[8][9] = 0; cut_off[9][8] = 0   # fresh corner walled off by empties
+# winding path of fresh fruit: rows joined at alternating ends, empties everywhere else, rotten at the start
+snake = [[1] * 10 if r % 2 == 0 else ([0] * 9 + [1] if r % 4 == 1 else [1] + [0] * 9) for r in range(10)]
+snake[0][0] = 2
+
+tests = [
+    ([[1,1,0],[0,1,1],[0,1,2]], 4),         # example 1
+    ([[1,0,1],[0,2,0],[1,0,1]], -1),        # example 2: rot can't move diagonally
+    (g("0"), 0),                            # nothing at all: no fresh fruit, so 0 minutes
+    (g("2"), 0),                            # only rotten fruit: already done
+    (g("1"), -1),                           # fresh fruit and nothing to rot it
+    (g("02"), 0),                           # no fresh fruit at the start: 0, not -1
+    (g("21"), 1),                           # one minute
+    (g("2111"), 3),                         # rot spreads one cell per minute
+    (g("21112"), 2),                        # rot from both ends meets in the middle
+    (g("201"), -1),                         # an empty cell blocks the spread
+    (g("20", "01"), -1),                    # diagonal does not count
+    (g("11", "11"), -1),                    # fresh fruit but no rotten fruit at all
+    (g("22", "22"), 0),                     # all rotten
+    (g("2", "1", "1", "0", "2", "1"), 2),   # one column, two separate groups, each with its own rotten fruit
+    (g("211", "000", "112"), 2),            # two rows rot at the same time, the answer is the slower one
+    (g("2110", "0001", "0002"), 2),         # two groups, each rotted by its own rotten fruit
+    (g("21", "00", "11"), -1),              # one group rots fully, another group has no rotten fruit
+    (full(10, 0), 0),                       # max size, all empty
+    (corner, 18),                           # max size, rot travels corner to corner
+    (middle, 10),                           # max size, rot starts near the middle
+    (two_corners, 9),                       # max size, two sources: the farthest cell is 9 from both
+    (almost, 17),                           # max size, the far corner is empty, so the answer drops
+    (cut_off, -1),                          # max size, one fresh fruit in the corner can never be reached
+    (snake, 54),                            # max size, one long winding path
+]
+
+def show(grid):
+    if len(grid) * len(grid[0]) > 30:
+        return f"[{len(grid)}x{len(grid[0])} grid]"
+    return "[" + ",".join("".join(map(str, row)) for row in grid) + "]"
+
+passed = 0
+for grid, expected in tests:
+    try:
+        got = sol.oranges_rotting(copy.deepcopy(grid))
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})'
+    ok = got == expected
+    passed += ok
+    print(f"{'PASS' if ok else 'FAIL'}  {show(grid)} -> {got}" + ("" if ok else f"  expected {expected}"))
+
+print(f"{passed}/{len(tests)} passed")
