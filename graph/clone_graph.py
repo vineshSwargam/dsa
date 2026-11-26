@@ -97,6 +97,7 @@
 from typing import Optional
 from collections import deque
 import traceback
+from collections import deque
 
 
 # Definition for a Node.
@@ -107,8 +108,65 @@ class Node:
 
 
 class Solution:
+    def using_rec_dfs(self, node):
+        cloned = {}
+
+        def clone(n):
+            if not n:
+                return
+
+            clone_node = Node(n.val)
+            cloned[n] = clone_node
+
+            for nbr_node in n.neighbors:
+                clone_node.neighbors.append(clone(nbr_node) if nbr_node not in cloned else cloned[nbr_node])
+
+            return clone_node
+
+        return clone(node)
+
+    def using_iter_dfs(self, node):
+        if not node:
+            return
+        
+        cloned = {}
+        cloned[node] = Node(node.val)
+        st = [node]
+
+        while st:
+            n = st.pop()
+
+            for nbr in n.neighbors:
+                if nbr not in cloned:
+                    cloned[nbr] = Node(nbr.val)
+                    st.append(nbr)
+                cloned[n].neighbors.append(cloned[nbr])
+
+        return cloned[node]
+
+
+    def using_iter_bfs(self, node):
+        if not node:
+            return
+        cloned = {}
+        cloned[node] = Node(node.val)
+        q = deque([node]) # stack of nodes to get through
+
+        while q:
+            n = q.popleft() # pn is parent node
+
+            for nbr in n.neighbors:
+                if nbr not in cloned:
+                    cloned[nbr] = Node(nbr.val)
+                    q.append(nbr)
+                cloned[n].neighbors.append(cloned[nbr])
+
+        return cloned[node]
+
     def clone_graph(self, node: Optional['Node']) -> Optional['Node']:
-        pass
+        # return self.using_rec_dfs(node)
+        # return self.using_iter_bfs(node)
+        return self.using_iter_dfs(node)
 
 
 sol = Solution()
