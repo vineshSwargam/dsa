@@ -80,23 +80,53 @@ from collections import deque
 
 
 class Solution:
-    def iter_bfs(grid):
+    def iter_bfs(self, grid):
         rows = len(grid)
         cols = len(grid[0])
-        min_mins = float('-inf')
+        min_mins = 0
+        all_rotten = True
         q = deque([])
 
-        # while q:
-
-for i in range(rows):
-for j in range(cols):
-if grid[i][j] == 2:
-# add it to as sources in the queue
-
+        for i in range(rows):
+            for j in range(cols):
+                if grid[i][j] == 2:
+                    q.append((i, j, 0))
         
+        while q:
+            i, j, d = q.popleft() # d is distance
+
+            if i-1 >= 0 and grid[i-1][j] == 1:
+                grid[i-1][j] = 2
+                q.append((i-1, j, d+1))
+                min_mins = max(d+1, min_mins)
+
+            if i+1 < rows and grid[i+1][j] == 1:
+                grid[i+1][j] = 2
+                q.append((i+1, j, d+1))
+                min_mins = max(d+1, min_mins)
+
+            if j-1 >= 0 and grid[i][j-1] == 1:
+                grid[i][j-1] = 2
+                q.append((i, j-1, d+1))
+                min_mins = max(d+1, min_mins)
+            
+            if j+1 < cols and grid[i][j+1] == 1:
+                grid[i][j+1] = 2
+                q.append((i, j+1, d+1))
+                min_mins = max(d+1, min_mins)
+
+        for i in range(rows):
+            for j in range(cols):
+                if grid[i][j] == 1:
+                    all_rotten = False
+        
+        if not all_rotten:
+            return -1
+        
+        return min_mins
 
     def oranges_rotting(self, grid: List[List[int]]) -> int:
-        pass
+        return self.iter_bfs(grid)
 
 
 sol = Solution()
