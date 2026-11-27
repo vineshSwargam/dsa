@@ -80,8 +80,55 @@ import traceback
 
 
 class Solution:
-    def pacific_atlantic(self, heights: List[List[int]]) -> List[List[int]]:
-        pass
+  def using_iter_dfs(self, hts):
+    rows = len(hts)
+    cols = len(hts[0])
+    pst = [] # pacific traversal stack
+    ast = [] # atlantic traversal stack
+    ps = set() # ps is pacific cells - reachable set of cells from pacific 
+    ats = set() # ats is atlantic cells - reachable set of cells from atlantic
+
+    for i in range(rows):
+      for j in range(cols):
+        if i == 0 or j == 0:
+          pst.append((i, j))
+          ps.add((i, j))
+
+        if i == rows-1 or j == cols-1:
+          ast.append((i, j))
+          ats.add((i, j))
+
+    # print('Pac and Atl stack -', pst, ast)
+    # print('Pac and Atl Set -', ps, ats)
+
+    def traverse(st, s):
+      while st:
+        i, j = st.pop()
+        # pst and ast go from 0,0 to till r, c in all 4 directions
+        # and only if next cell is same or lesser height
+        if i+1 < rows and hts[i+1][j] >= hts[i][j] and (i+1, j) not in s:
+          st.append((i+1, j))
+          s.add((i+1, j))
+        if i-1 >= 0 and hts[i-1][j] >= hts[i][j] and (i-1, j) not in s:
+          st.append((i-1, j))
+          s.add((i-1, j))
+        if j+1 < cols and hts[i][j+1] >= hts[i][j] and (i, j+1) not in s:
+          st.append((i, j+1))
+          s.add((i, j+1))
+        if j-1 >= 0 and hts[i][j-1] >= hts[i][j] and (i, j-1) not in s:
+          st.append((i, j-1))
+          s.add((i, j-1))
+      
+      return s
+
+    ps = traverse(pst, ps)
+    ats = traverse(ast, ats)
+
+    return list(ps & ats)
+      
+    
+  def pacific_atlantic(self, heights: List[List[int]]) -> List[List[int]]:
+      return self.using_iter_dfs(heights)
 
 
 sol = Solution()
@@ -97,6 +144,7 @@ row_100 = [[(c * 37) % 1001 for c in range(100)]]                              #
 col_100 = [[(r * 53) % 1001] for r in range(100)]                              # one column: same
 
 tests = [
+  ([[1,2,3],[8,9,4],[7,6,5]], [[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]]),
     ([[4,2,7,3,4],[7,4,6,4,7],[6,3,5,3,6]],
      [[0,2],[0,4],[1,0],[1,1],[1,2],[1,3],[1,4],[2,0]]),                       # example 1
     ([[1],[1]], [[0,0],[1,0]]),                                               # example 2
