@@ -87,14 +87,74 @@
 # 58.5%
 
 
+from typing import List
+import traceback
+
+
 class Solution:
     def can_finish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        pass
 
 
 sol = Solution()
-numCourses, prerequisites = 2, [[0,1]] # Output true
-# numCourses, prerequisites = 2, [[0,1],[1,0]] # Output false
 
+# run from the repo root: python3 -m graph.course_schedule
+# (numCourses, prerequisites, expected). [a, b] means take b before a.
 
+# 1000 courses in one line: 0 needs 1, 1 needs 2, ... 998 needs 999
+chain_1000 = [[i, i + 1] for i in range(999)]
+# the same line, but the last course needs the first: one big loop
+loop_1000 = chain_1000 + [[999, 0]]
 
-print(sol.can_finish(numCourses, prerequisites))
+# 251 layers of 2 courses; each course needs both courses in the next layer (1000 pairs).
+# No loop, but there are 2^250 different routes from the top to the bottom, so
+# without remembering finished courses this never ends.
+def ladder(with_loop):
+    pairs = []
+    for layer in range(250):
+        for a in (2 * layer, 2 * layer + 1):
+            for b in (2 * layer + 2, 2 * layer + 3):
+                pairs.append([a, b])
+    if with_loop:
+        pairs[-1] = [501, 0]       # swap one pair for a loop from the bottom back to the top
+    return pairs
+
+tests = [
+    (2, [[0,1]], True),                                    # example 1
+    (2, [[0,1],[1,0]], False),                             # example 2: two courses need each other
+    (1, [], True),                                         # one course, nothing needed
+    (5, [], True),                                         # no prerequisites at all
+    (1, [[0,0]], False),                                   # a course that needs itself
+    (4, [[1,0],[2,1],[3,2]], True),                        # a straight line
+    (3, [[0,1],[1,2],[2,0]], False),                       # three courses in a loop
+    (4, [[1,0],[2,0],[3,1],[3,2]], True),                  # diamond: course 0 is reached twice, but there's no loop
+    (4, [[1,0],[2,3],[3,2]], False),                       # the loop is in a separate group, away from course 0
+    (4, [[0,1],[1,2],[2,3],[3,1]], False),                 # 0 is fine on its own, but leads into a loop
+    (6, [[1,0],[2,1],[4,3],[5,4]], True),                  # two separate lines
+    (5, [[1,0],[2,0],[3,0],[4,0]], True),                  # everyone needs course 0
+    (5, [[0,1],[0,2],[0,3],[0,4]], True),                  # course 0 needs everyone
+    (5, [[0,1],[1,2],[2,3],[3,4],[4,2]], False),           # loop at the end of a line
+    (3, [[1,0],[2,1],[0,2]], False),                       # same loop as above, listed in another order
+    (6, [[0,1],[1,2],[3,4],[4,5],[5,3],[2,0]], False),     # two loops
+    (1000, [], True),                                      # max courses, nothing needed
+    (1000, chain_1000, True),                              # max size, 1000 courses in one line: deep recursion
+    (1000, loop_1000, False),                              # max size, one 1000-course loop
+    (502, ladder(False), True),                            # 2^250 routes and no loop: too slow without remembering finished courses
+    (502, ladder(True), False),                            # same, with a loop from the bottom back to the top
+]
+
+def show(pairs):
+    return str(pairs) if len(pairs) <= 6 else f"[{len(pairs)} pairs]"
+
+passed = 0
+for n, pairs, expected in tests:
+    try:
+        got = sol.can_finish(n, [p[:] for p in pairs])
+        ok = got == expected
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        got, ok = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})', False
+    passed += ok
+    print(f"{'PASS' if ok else 'FAIL'}  n={n}, {show(pairs)} -> {got}" + ("" if ok else f"  expected {expected}"))
+
+print(f"{passed}/{len(tests)} passed")
