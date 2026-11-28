@@ -82,6 +82,42 @@ from collections import defaultdict, deque
 
 
 class Solution:
+    def using_recur_dfs(self, nc, reqs):
+        cdm = { i: [] for i in range(nc) }
+
+        for c, d in reqs:
+            cdm[c].append(d)
+
+        visited = set()
+        order = []
+        def dfs(c):
+            if c in visited:
+                return False
+
+            if not cdm[c]:
+                order.append(c)
+                return True
+            
+            visited.add(c)
+            for d in cdm[c]:
+                if not dfs(d):
+                    return False
+
+            visited.remove(c)
+            cdm[c] = [] # this is ensuring we don't run that course check again
+            order.append(c)
+            return True
+
+
+        for c in range(nc):
+            if not dfs(c):
+                return []
+        
+        return order
+
+            
+
+
     def using_iter_dfs(self, nc, reqs):
         cdm = { i: [] for i in range(nc) }
 
@@ -149,7 +185,8 @@ class Solution:
             
     def find_order(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
         # return self.using_kahn(numCourses, prerequisites)
-        return self.using_iter_dfs(numCourses, prerequisites)
+        # return self.using_iter_dfs(numCourses, prerequisites)
+        return self.using_recur_dfs(numCourses, prerequisites)
 
 
 sol = Solution()
