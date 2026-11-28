@@ -89,11 +89,144 @@
 
 from typing import List
 import traceback
+from collections import defaultdict, deque
 
 
 class Solution:
+    # def using_iter(self, nc, reqs):
+    #     preMap = {i: [] for i in range(nc)}
+    #     for crs, pre in reqs:
+    #         preMap[crs].append(pre)
+
+    #     # Store all courses along the current DFS path
+    #     visiting = set()
+    #     def dfs(crs):
+    #         if crs in visiting:
+    #             # Cycle detected
+    #             return False
+    #         if preMap[crs] == []:
+    #             return True
+
+    #         visiting.add(crs)
+    #         for pre in preMap[crs]:
+    #             if not dfs(pre):
+    #                 return False
+    #         visiting.remove(crs)
+    #         preMap[crs] = []
+    #         return True
+
+    #     for c in range(nc):
+    #         if not dfs(c):
+    #             return False
+    #     return True
+
+    
+    def using_iter_dfs(self, nc, reqs):
+        cdm = { i: [] for i in range(nc)} # course dependency map
+
+        for c, d in reqs:
+            cdm[c].append(d)
+        
+        st = []
+        # stack = 0, 1, 2, 3 
+        # [ [1, 0], [2, 3], [3, 2] ] => False
+        for c in range(nc):
+            st = [c]
+            visited = set()
+
+            while st:
+                print('Stack -', st)
+                c = st.pop()
+                print('C -', c)
+                print('Visited -', visited)
+
+                if c in visited: # cycle detected
+                    return False
+                print('Not in visited')
+            
+                visited.add(c)
+
+                if not cdm[c]: # no dependency left for this course, go next
+                    print('NOTHING LEFT')
+                    print('=====================')
+                    continue
+                
+                for d in cdm[c]: # check each dependency of course, add it to stack
+                    st.append(d)
+                print('=====================')
+
+        
+        return True
+
+
+
+    def using_recur_dfs(self, nc, reqs):
+        cdm = { i: [] for i in range(nc)} # course dependency map
+
+        for c, d in reqs:
+            cdm[c].append(d)
+        
+        visited = set()
+        def dfs(c):
+            if c in visited: # cycle detected
+                return False
+    
+            if not cdm[c]: # has no dependency left, course can complete
+                return True
+            
+            visited.add(c)
+            for d in cdm[c]: # loop through all dependency
+                # recurse dependency of dependency
+                # if d of d cannot be completed, end early
+                if not dfs(d): 
+                    return False
+                # else dependency was completed, can check next dependency
+            
+            visited.remove(c)
+            cdm[c] = []
+            return True
+
+
+        for c in range(nc):
+            if not dfs(c):
+                return False
+        
+        return True
+
+    
+    def using_kahn_algo(self, nc, reqs):
+        # list of what courses can x course unlock, [course x]: list[courses course x can unblock]. lets initialise this dict
+        unblock = defaultdict(list)
+        # count of how many courses does course i have as prereqs
+        needs = [0]*nc
+
+        # lets populate unblock and needs now
+        for c, d in reqs:
+            unblock[d].append(c)
+            needs[c] += 1
+
+        q = deque(i for i, n in enumerate(needs) if n == 0)
+
+        completed = 0
+
+        while q:
+            # now we decrement the needs and handle unblocks from q of courses that have no prerequisite needs
+            c = q.popleft()
+
+            completed += 1
+
+            for d in unblock[c]: # all courses that depended on c
+                needs[d] -= 1
+                if needs[d] == 0:
+                    q.append(d)
+
+        return completed == nc
+
+    
     def can_finish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
-        pass
+        # return self.using_recur_dfs(numCourses, prerequisites)
+        # return self.using_iter_dfs(numCourses, prerequisites)
+        return self.using_kahn_algo(numCourses, prerequisites)
 
 
 sol = Solution()
@@ -118,6 +251,7 @@ def ladder(with_loop):
     if with_loop:
         pairs[-1] = [501, 0]       # swap one pair for a loop from the bottom back to the top
     return pairs
+
 
 tests = [
     (2, [[0,1]], True),                                    # example 1
