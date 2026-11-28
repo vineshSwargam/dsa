@@ -76,14 +76,99 @@
 # 64.0%
 
 
+from typing import List
+import traceback
+
+
 class Solution:
     def find_order(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
+        pass
 
 
 sol = Solution()
-numCourses, prerequisites = 3, [[1,0]] # Output [0,1,2]
-# numCourses, prerequisites = 3, [[0,1],[1,2],[2,0]] # Output []
 
+# run from the repo root: python3 -m graph.course_schedule_ii
+# (numCourses, prerequisites, possible). [a, b] means take b before a.
+# Many orders can be right, so the test doesn't compare to one answer. It checks that:
+#   - possible: the order has every course exactly once, and b comes before a for every [a, b]
+#   - impossible: the answer is []
 
+# 1000 courses in one line: 0 needs 1, 1 needs 2, ... 998 needs 999
+chain_1000 = [[i, i + 1] for i in range(999)]
+# the same line, but the last course needs the first: one big loop
+loop_1000 = chain_1000 + [[999, 0]]
 
-print(sol.find_order(numCourses, prerequisites))
+# 251 layers of 2 courses; each course needs both courses in the next layer (1000 pairs).
+# No loop, but there are 2^250 different routes from the top to the bottom.
+def ladder(with_loop):
+    pairs = []
+    for layer in range(250):
+        for a in (2 * layer, 2 * layer + 1):
+            for b in (2 * layer + 2, 2 * layer + 3):
+                pairs.append([a, b])
+    if with_loop:
+        pairs[-1] = [501, 0]       # swap one pair for a loop from the bottom back to the top
+    return pairs
+
+tests = [
+    (3, [[1,0]], True),                                    # example 1: course 2 has no pairs but must still be in the order
+    (3, [[0,1],[1,2],[2,0]], False),                       # example 2
+    (1, [], True),                                         # one course
+    (4, [], True),                                         # no prerequisites: any order of all 4
+    (2, [[0,1]], True),                                    # 1 then 0
+    (2, [[0,1],[1,0]], False),                             # two courses need each other
+    (1, [[0,0]], False),                                   # a course that needs itself
+    (4, [[1,0],[2,1],[3,2]], True),                        # a straight line: only one right order
+    (4, [[0,1],[1,2],[2,3]], True),                        # the same line, backwards: 3, 2, 1, 0
+    (4, [[1,0],[2,0],[3,1],[3,2]], True),                  # diamond: 0 first, 3 last
+    (4, [[1,0],[2,3],[3,2]], False),                       # the loop is in a separate group
+    (4, [[0,1],[1,2],[2,3],[3,1]], False),                 # 0 is fine on its own, but leads into a loop
+    (6, [[1,0],[2,1],[4,3],[5,4]], True),                  # two separate lines
+    (5, [[1,0],[2,0],[3,0],[4,0]], True),                  # everyone needs course 0
+    (5, [[0,1],[0,2],[0,3],[0,4]], True),                  # course 0 needs everyone, so it comes last
+    (5, [[0,1],[1,2],[2,3],[3,4],[4,2]], False),           # loop at the end of a line
+    (6, [[3,0],[3,1],[4,1],[4,2],[5,3],[5,4]], True),      # courses with two prerequisites each
+    (7, [[1,0],[2,1],[3,2],[4,0],[5,4],[6,5],[6,3]], True),   # two routes from 0 that join at 6
+    (1000, [], True),                                      # max courses, nothing needed
+    (1000, chain_1000, True),                              # max size, 1000 courses in one line: deep recursion
+    (1000, loop_1000, False),                              # max size, one 1000-course loop
+    (502, ladder(False), True),                            # 2^250 routes and no loop: too slow without remembering finished courses
+    (502, ladder(True), False),                            # same, with a loop from the bottom back to the top
+]
+
+def check(n, pairs, possible, got):
+    """Return "" if got is a right answer, otherwise what's wrong."""
+    if not isinstance(got, list):
+        return f"expected a list, got {type(got).__name__}"
+    if not possible:
+        return "" if got == [] else "expected [] (there's a loop)"
+    if len(got) != n or sorted(got) != list(range(n)):
+        missing = sorted(set(range(n)) - set(got))
+        extra = len(got) - len(set(got))
+        return (f"should have each of the {n} courses once; got {len(got)} items"
+                + (f", missing {missing[:5]}" if missing else "")
+                + (f", {extra} repeated" if extra else ""))
+    pos = {c: i for i, c in enumerate(got)}
+    for a, b in pairs:
+        if pos[b] > pos[a]:
+            return f"course {a} comes before its prerequisite {b}"
+    return ""
+
+def show(x):
+    return str(x) if len(x) <= 8 else f"[{len(x)} items]"
+
+passed = 0
+for n, pairs, possible in tests:
+    try:
+        got = sol.find_order(n, [p[:] for p in pairs])
+        why = check(n, pairs, possible, got)
+        ok = why == ""
+        shown = show(got) if isinstance(got, list) else got
+    except Exception as e:
+        where = traceback.extract_tb(e.__traceback__)[-1]     # the line that actually raised
+        ok, why = False, ""
+        shown = f'ERROR {type(e).__name__}: {e}  (line {where.lineno}: {where.line})'
+    passed += ok
+    print(f"{'PASS' if ok else 'FAIL'}  n={n}, {show(pairs)} -> {shown}" + ("" if ok else f"  ({why})" if why else ""))
+
+print(f"{passed}/{len(tests)} passed")
