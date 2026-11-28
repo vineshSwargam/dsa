@@ -126,35 +126,31 @@ class Solution:
 
         for c, d in reqs:
             cdm[c].append(d)
-        
-        st = []
-        # stack = 0, 1, 2, 3 
-        # [ [1, 0], [2, 3], [3, 2] ] => False
+
+        done = set()
+        visited = set()
+
         for c in range(nc):
-            st = [c]
-            visited = set()
+            st = [(c, False)]
 
             while st:
-                print('Stack -', st)
-                c = st.pop()
-                print('C -', c)
-                print('Visited -', visited)
+                c, exiting = st.pop()
+
+                if exiting:
+                    visited.remove(c)
+                    done.add(c)
+                    continue
+                
+                if c in done:
+                    continue
 
                 if c in visited: # cycle detected
                     return False
-                print('Not in visited')
             
                 visited.add(c)
-
-                if not cdm[c]: # no dependency left for this course, go next
-                    print('NOTHING LEFT')
-                    print('=====================')
-                    continue
-                
+                st.append((c, True))
                 for d in cdm[c]: # check each dependency of course, add it to stack
-                    st.append(d)
-                print('=====================')
-
+                    st.append((d, False))
         
         return True
 
@@ -225,8 +221,8 @@ class Solution:
     
     def can_finish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
         # return self.using_recur_dfs(numCourses, prerequisites)
-        # return self.using_iter_dfs(numCourses, prerequisites)
-        return self.using_kahn_algo(numCourses, prerequisites)
+        return self.using_iter_dfs(numCourses, prerequisites)
+        # return self.using_kahn_algo(numCourses, prerequisites)
 
 
 sol = Solution()
