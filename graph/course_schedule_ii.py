@@ -89,14 +89,18 @@ class Solution:
             cdm[c].append(d)
 
         visited = set()
+        done = set()
         order = []
         def dfs(c):
+            if c in done:
+                return True
             if c in visited:
                 return False
 
-            if not cdm[c]:
-                order.append(c)
-                return True
+            # replace this early return for consistent course order tracking. Replace it with a done set
+            # if not cdm[c]:
+            #     order.append(c)
+            #     return True
             
             visited.add(c)
             for d in cdm[c]:
@@ -104,7 +108,8 @@ class Solution:
                     return False
 
             visited.remove(c)
-            cdm[c] = [] # this is ensuring we don't run that course check again
+            # cdm[c] = [] # this is ensuring we don't run that course check again # replaced with done
+            done.add(c)
             order.append(c)
             return True
 
