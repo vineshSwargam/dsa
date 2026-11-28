@@ -78,11 +78,79 @@
 
 from typing import List
 import traceback
+from collections import defaultdict, deque
 
 
 class Solution:
+    def using_iter_dfs(self, nc, reqs):
+        cdm = { i: [] for i in range(nc) }
+
+        for c, d in reqs:
+            cdm[c].append(d)
+
+        visited = set()
+        done = set()
+        order = []
+
+        for i in range(nc):
+            st = [(i, False)]
+            while st:
+                c, exiting = st.pop()
+
+                if exiting:
+                    visited.remove(c)
+                    done.add(c)
+                    order.append(c)
+                    continue
+
+                if c in done:
+                    continue
+
+                if c in visited:
+                    return []
+                    
+                visited.add(c)
+                st.append((c, True))
+                # order.append(c)
+                for d in cdm[c]:
+                    st.append((d, False))
+        
+        return order
+
+
+
+    def using_kahn(self, nc, reqs):
+        # need a { [course x]: [unblocks these courses]} dict
+        unblock = defaultdict(list)
+        # need a count of how many courses are blocking a course i
+        blocks = [0]*nc
+
+        # populate both
+        for c, d in reqs:
+            unblock[d].append(c)
+            blocks[c] += 1
+        
+        # start the queue with unblocked courses first
+        q = deque(i for i, blocks_count in enumerate(blocks) if blocks_count == 0)
+        completed = [] # track courses completed to return whethere nc courses are completed or not
+
+        while q:
+            c = q.popleft()
+            completed.append(c)
+
+            for d in unblock[c]: # c is completed, so let's decrement the block counts
+                blocks[d] -= 1
+                if blocks[d] == 0: # this is ready for completion, push in q
+                    q.append(d)
+        
+        if len(completed) == nc:
+            return completed
+        
+        return []
+            
     def find_order(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
-        pass
+        # return self.using_kahn(numCourses, prerequisites)
+        return self.using_iter_dfs(numCourses, prerequisites)
 
 
 sol = Solution()
