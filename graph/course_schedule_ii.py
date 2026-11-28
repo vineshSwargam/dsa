@@ -100,6 +100,7 @@ class Solution:
                 if exiting:
                     visited.remove(c)
                     done.add(c)
+                    # order of exiting is dependents go first, so we can safely append whatever is exiting as the right order of taking the course
                     order.append(c)
                     continue
 
@@ -110,14 +111,12 @@ class Solution:
                     return []
                     
                 visited.add(c)
-                st.append((c, True))
+                st.append((c, True)) # until it's dependencies are popped, this won't leave, but its marked exiting so it will leave as soon as it is popped
                 # order.append(c)
                 for d in cdm[c]:
                     st.append((d, False))
         
         return order
-
-
 
     def using_kahn(self, nc, reqs):
         # need a { [course x]: [unblocks these courses]} dict
